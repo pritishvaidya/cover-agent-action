@@ -1,0 +1,37 @@
+name: 'Coverage Check'
+description: 'Runs coverage check with specified parameters'
+inputs:
+  source-file-path:
+    description: 'Path to the source file'
+    required: true
+  test-file-path:
+    description: 'Path to the test file'
+    required: true
+  code-coverage-report-path:
+    description: 'Path to the code coverage report'
+    required: true
+    default: './coverage/cobertura-coverage.xml'
+  test-command:
+    description: 'Command to run tests'
+    required: true
+    default: 'yarn test:coverage'
+  test-command-dir:
+    description: 'Directory for the test command'
+    required: true
+    default: '.'
+  coverage-type:
+    description: 'Type of coverage report'
+    required: true
+    default: 'cobertura'
+  desired-coverage:
+    description: 'Desired coverage percentage'
+    required: true
+    default: '75'
+  max-iterations:
+    description: 'Maximum number of iterations'
+    required: true
+    default: '1'
+
+runs:
+  using: 'node20'
+  main: 'index.js'
