@@ -48,6 +48,7 @@ async function run() {
         const coverageType = core.getInput('coverage-type');
         const desiredCoverage = core.getInput('desired-coverage');
         const maxIterations = core.getInput('max-iterations');
+        console.log({ testCommand, coverageType, desiredCoverage, maxIterations, maxIterations, env: { token: process.env.GITHUB_TOKEN, prToken: process.env.GITHUB_PR_TOKEN  } })
         const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
         const refParts = process.env.GITHUB_REF.split('/');
         const prNumber = refParts[2]; // PR number is the second part of the path
