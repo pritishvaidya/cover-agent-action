@@ -87,8 +87,8 @@ runs:
         maxIterations: '10'
         codeCoverageReportPath: './coverage/cobertura-coverage.xml'
         testCommandDir: '.'
-        githubToken: ${{ secrets.GIT_TOKEN }}
-        prGithubToken: ${{ secrets.GITHUB_TOKEN }}
+        githubToken: ${{ inputs.githubToken }}
+        prGithubToken: ${{ inputs.prGithubToken }}
         runCoverAgent: 'true'
         sourceDir: ${{ inputs.sourceDir }}
 
