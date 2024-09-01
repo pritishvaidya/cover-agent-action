@@ -66,11 +66,13 @@ async function run() {
         await saveCoverageReport('./initial-coverage.xml');
 
         // Fetch previous PR details
+        console.log('Fetch previous PR details')
         const { data: previousPR } = await octokit.pulls.get({
             owner,
             repo,
             pull_number: prNumber,
         });
+        console.log('Fetched previous PR details')
 
         const previousBranchName = previousPR.head.ref;
         const newBranchName = `${previousBranchName}-test`;
@@ -79,11 +81,13 @@ async function run() {
         const newPRBody = `This PR is created for testing purposes based on the previous branch: ${previousBranchName}.`;
 
         // Fetch changed files in the PR
+        console.log('Fetch changed files in the PR')
         const { data: changedFiles } = await octokit.pulls.listFiles({
             owner,
             repo,
             pull_number: prNumber,
         });
+        console.log('Fetched changed files in the PR')
 
         const filePaths = changedFiles.map(file => file.filename);
         const testDirs = new Set();
@@ -155,8 +159,8 @@ async function saveCoverageReport(reportPath) {
 async function uploadCoverageReports() {
     try {
         console.log('Uploading coverage reports as artifacts');
-        await execPromise('gh actions upload-artifact ./coverage/initial-coverage.xml --name initial-coverage');
-        await execPromise('gh actions upload-artifact ./coverage/updated-coverage.xml --name updated-coverage');
+        await execPromise('gh actions upload-artifact ./initial-coverage.xml --name initial-coverage');
+        await execPromise('gh actions upload-artifact ./updated-coverage.xml --name updated-coverage');
     } catch (error) {
         core.setFailed(`Failed to upload coverage reports: ${error.message}`);
     }
