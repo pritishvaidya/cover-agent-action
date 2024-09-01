@@ -54,9 +54,11 @@ runs:
         node-version: ${{ inputs.node-version }}
 
     - name: Install Node.js dependencies
+      shell: sh
       run: npm install
 
     - name: Set environment variable for Git SHA
+      shell: sh
       run: echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)" >> $GITHUB_ENV
 
     - name: Set up Python
@@ -75,9 +77,11 @@ runs:
           ${{ runner.os }}-poetry-
 
     - name: Install Poetry
+      shell: sh
       uses: snok/install-poetry@v1
 
     - name: Install Cover-Agent
+      shell: sh
       run: pip install git+https://github.com/Codium-ai/cover-agent.git
 
     - name: Run index.js
