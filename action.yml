@@ -100,14 +100,25 @@ runs:
         name: test-results
         path: ./test-results
 
-    - name: Upload initial coverage report
-      uses: actions/upload-artifact@v3
-      with:
-        name: initial-coverage
-        path: ./initial-coverage.xml
+#    - name: Upload initial coverage report
+#      uses: actions/upload-artifact@v3
+#      with:
+#        name: initial-coverage
+#        path: ./initial-coverage.xml
+#
+#    - name: Upload updated coverage report
+#      uses: actions/upload-artifact@v3
+#      with:
+#        name: updated-coverage
+#        path: ./updated-coverage.xml
 
-    - name: Upload updated coverage report
-      uses: actions/upload-artifact@v3
+    - name: Create PR with changes
+      id: create-pr
+      uses: peter-evans/create-pull-request@v6
       with:
-        name: updated-coverage
-        path: ./updated-coverage.xml
+        branch: "cover-agent/${{ github.head_ref || github.ref_name }}"
+        base: ${{ github.head_ref || github.ref_name }}
+        commit-message: Add generated tests
+        title: "Generated test for PR #${{ github.event.number }}"
+        token: ${{ inputs.prgithubToken }}
+        draft: true

@@ -119,16 +119,16 @@ async function run() {
         await saveCoverageReport('./updated-coverage.xml');
 
         // Step 5: Upload updated coverage reports
-        // await uploadCoverageReports();
+        await uploadCoverageReports();
 
         // Step 6: Compare coverage reports
         const coverageSummary = await compareCoverageReports();
 
         // Step 7: Comment on the PR
-        await commentOnPR(prNumber, coverageSummary);
+        // await commentOnPR(prNumber, coverageSummary);
 
         // Step 8: Create a PR with changes
-        await createPRWithChanges(newBranchName, newPRTitle, newPRBody);
+        // await createPRWithChanges(newBranchName, newPRTitle, newPRBody);
 
     } catch (error) {
         core.setFailed(`Action failed with error: ${error.message}`);
@@ -205,7 +205,7 @@ async function commentOnPR(prNumber, coverageSummary) {
 async function createPRWithChanges(branchName, title, body) {
     try {
         const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-        const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+        const octokit = new Octokit({ auth:  process.env.GITHUB_PR_TOKEN });
 
         console.log(`Creating PR from branch: ${branchName}`);
 
