@@ -145,12 +145,7 @@ async function saveCoverageReport(reportPath) {
     try {
         // Debugging: List coverage directory
         console.log('Listing contents of the coverage directory');
-        if (fs.existsSync(reportPath)) {
-            console.log(`Saving coverage report to ${reportPath}`);
-            // Implement the logic to save or copy coverage reports
-        } else {
-            core.setFailed(`Coverage report not found at ${reportPath}`);
-        }
+        console.log(`Saving coverage report to ${reportPath}`);
     } catch (error) {
         core.setFailed(`Failed to save coverage report: ${error.message}`);
     }
