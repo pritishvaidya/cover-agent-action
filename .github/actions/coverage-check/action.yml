@@ -1,37 +1,110 @@
 name: 'Coverage Check'
-description: 'Runs coverage check with specified parameters'
+description: 'Runs coverage check with specified parameters and generates a pull request with test results'
+
 inputs:
-  source-file-path:
-    description: 'Path to the source file'
-    required: true
-  test-file-path:
-    description: 'Path to the test file'
-    required: true
-  code-coverage-report-path:
-    description: 'Path to the code coverage report'
-    required: true
-    default: './coverage/cobertura-coverage.xml'
   test-command:
     description: 'Command to run tests'
     required: true
-    default: 'yarn test:coverage'
-  test-command-dir:
-    description: 'Directory for the test command'
-    required: true
-    default: '.'
   coverage-type:
     description: 'Type of coverage report'
     required: true
-    default: 'cobertura'
   desired-coverage:
     description: 'Desired coverage percentage'
     required: true
-    default: '75'
   max-iterations:
     description: 'Maximum number of iterations'
     required: true
-    default: '1'
+  open-api-key:
+    description: 'API key for the coverage tool'
+    required: false
+  github-token:
+    description: 'GitHub token for authentication'
+    required: true
+  pr-github-token:
+    description: 'GitHub token for creating PR and commenting'
+    required: true
+  python-version:
+    description: 'Python version to install'
+    required: true
+    default: '3.12'
+  node-version:
+    description: 'Node.js version to install'
+    required: true
+    default: '20.3.1'
+
+outputs:
+  previousCoverage:
+    description: "Previous coverage"
+    value: ${{ steps.coverageBefore.outputs.coverage }}
+  currentCoverage:
+    description: "Current coverage"
+    value: ${{ steps.coverageAfter.outputs.coverage }}
 
 runs:
-  using: 'node20'
-  main: 'index.js'
+  using: 'composite'
+  steps:
+    - name: Checkout Codebase
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 3
+
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Install Node.js dependencies
+      run: npm install
+
+    - name: Set environment variable for Git SHA
+      run: echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)" >> $GITHUB_ENV
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install Poetry
+      run: |
+        pip install poetry
+        poetry config virtualenvs.create false
+
+    - name: Cache Poetry dependencies
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cache/pypoetry
+          ~/.cache/pip
+        key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-poetry-
+
+    - name: Install Cover-Agent
+      run: pip install git+https://github.com/Codium-ai/cover-agent.git
+
+    - name: Run index.js
+      run: node .github/actions/coverage-check/index.js
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        PR_GITHUB_TOKEN: ${{ inputs.pr-github-token }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_REF: ${{ github.ref }}
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: ./test-results
+
+    - name: Upload initial coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: initial-coverage
+        path: ./coverage/initial-coverage.xml
+
+    - name: Upload updated coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: updated-coverage
+        path: ./coverage/updated-coverage.xml
