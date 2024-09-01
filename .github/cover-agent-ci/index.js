@@ -52,7 +52,7 @@ async function run() {
         const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
         const refParts = process.env.GITHUB_REF.split('/');
         const prNumber = refParts[2]; // PR number is the second part of the path
-        const octokit = new Octokit({ auth: core.getInput('githubToken') });
+        const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
         // Get OPEN_API_KEY from environment variables
         const openApiKey = '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';
@@ -187,7 +187,7 @@ async function compareCoverageReports() {
 async function commentOnPR(prNumber, coverageSummary) {
     try {
         const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-        const octokit = new Octokit({ auth: core.getInput('githubToken') });
+        const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
         console.log('Commenting on PR with coverage summary');
         await octokit.issues.createComment({
@@ -204,7 +204,7 @@ async function commentOnPR(prNumber, coverageSummary) {
 async function createPRWithChanges(branchName, title, body) {
     try {
         const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-        const octokit = new Octokit({ auth: core.getInput('githubToken') });
+        const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
         console.log(`Creating PR from branch: ${branchName}`);
 
