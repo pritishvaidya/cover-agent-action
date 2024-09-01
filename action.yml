@@ -53,9 +53,9 @@ runs:
       with:
         node-version: ${{ inputs.node-version }}
 
-    - name: Install Node.js dependencies
+    - name: Install dependencies
       shell: sh
-      run: npm install -g @actions/core @actions/exec @octokit/rest
+      run: npm install
 
     - name: Set environment variable for Git SHA
       shell: sh

@@ -1,6 +1,5 @@
 # Node.js
 node_modules/
-package-lock.json
 
 # Build output
 dist/
@@ -17,7 +16,6 @@ coverage/
 .DS_Store
 
 # npm
-package-lock.json
 npm-debug.log*
 
 # Yarn
