@@ -49,7 +49,8 @@ async function run() {
         const desiredCoverage = core.getInput('desired-coverage');
         const maxIterations = core.getInput('max-iterations');
         const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-        const prNumber = process.env.GITHUB_REF.split('/').pop();
+        const refParts = process.env.GITHUB_REF.split('/');
+        const prNumber = refParts[2]; // PR number is the second part of the path
         const octokit = new Octokit({ auth: core.getInput('github-token') });
 
         // Get OPEN_API_KEY from environment variables
