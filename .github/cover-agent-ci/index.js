@@ -63,6 +63,7 @@ async function run() {
         await uploadTestResults();
 
         // Step 2: Save initial coverage report
+        await listCoverageDirectory(); // Add this line before saving or uploading coverage reports
         await saveCoverageReport('./coverage/initial-coverage.xml');
 
         // Fetch previous PR details
@@ -132,14 +133,32 @@ async function uploadTestResults() {
     }
 }
 
+async function listCoverageDirectory() {
+    try {
+        console.log('Listing contents of the coverage directory');
+        await execPromise('ls -la ./coverage');
+    } catch (error) {
+        core.setFailed(`Failed to list coverage directory: ${error.message}`);
+    }
+}
+
 async function saveCoverageReport(reportPath) {
     try {
-        console.log(`Saving coverage report to ${reportPath}`);
-        // Implement the logic to save or copy coverage reports
+        // Debugging: List coverage directory
+        console.log('Listing contents of the coverage directory');
+        await execPromise('ls -la ./coverage');
+
+        if (fs.existsSync(reportPath)) {
+            console.log(`Saving coverage report to ${reportPath}`);
+            // Implement the logic to save or copy coverage reports
+        } else {
+            core.setFailed(`Coverage report not found at ${reportPath}`);
+        }
     } catch (error) {
         core.setFailed(`Failed to save coverage report: ${error.message}`);
     }
 }
+
 
 async function uploadCoverageReports() {
     try {
