@@ -63,8 +63,7 @@ async function run() {
         await uploadTestResults();
 
         // Step 2: Save initial coverage report
-        await listCoverageDirectory(); // Add this line before saving or uploading coverage reports
-        await saveCoverageReport('./coverage/initial-coverage.xml');
+        await saveCoverageReport('./initial-coverage.xml');
 
         // Fetch previous PR details
         const { data: previousPR } = await octokit.pulls.get({
@@ -105,7 +104,7 @@ async function run() {
         }
 
         // Step 4: Save updated coverage report
-        await saveCoverageReport('./coverage/updated-coverage.xml');
+        await saveCoverageReport('./updated-coverage.xml');
 
         // Step 5: Upload updated coverage reports
         await uploadCoverageReports();
@@ -146,8 +145,6 @@ async function saveCoverageReport(reportPath) {
     try {
         // Debugging: List coverage directory
         console.log('Listing contents of the coverage directory');
-        await execPromise('ls -la ./coverage');
-
         if (fs.existsSync(reportPath)) {
             console.log(`Saving coverage report to ${reportPath}`);
             // Implement the logic to save or copy coverage reports
