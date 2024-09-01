@@ -60,7 +60,7 @@ async function run() {
         let previousPR = '';
         console.log(`Fetching PR details with PR number: ${prNumber}`);
         try {
-            const { stdout } = await execPromise(`gh pr view ${prNumber} --json head --jq '.head.ref'`);
+            const { stdout } = await execPromise(`gh pr view ${prNumber} --json headRefName --jq '.head.ref'`);
             const previousBranchName = stdout.trim();
             const newBranchName = `${previousBranchName}-test`;
 
