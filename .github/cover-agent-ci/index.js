@@ -239,7 +239,7 @@ function findTestDirectory(filePath) {
 
 function runCoverageCheck(testDir, testCommand, coverageType, desiredCoverage, maxIterations) {
     return new Promise((resolve, reject) => {
-        const command = `npx cover-agent \
+        const command = `cover-agent \
       --code-coverage-report-path "./coverage/cobertura-coverage.xml" \
       --test-command "${testCommand}" \
       --test-command-dir "${testDir}" \
