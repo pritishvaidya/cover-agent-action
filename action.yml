@@ -86,3 +86,22 @@ runs:
         PR_GITHUB_TOKEN: ${{ inputs.pr-github-token }}
         GITHUB_REPOSITORY: ${{ github.repository }}
         GITHUB_REF: ${{ github.ref }}
+
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: ./test-results
+
+    - name: Upload initial coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: initial-coverage
+        path: ./initial-coverage.xml
+
+    - name: Upload updated coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: updated-coverage
+        path: ./updated-coverage.xml
