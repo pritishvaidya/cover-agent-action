@@ -64,11 +64,6 @@ runs:
       with:
         python-version: ${{ inputs.python-version }}
 
-    - name: Install Poetry
-      run: |
-        pip install poetry
-        poetry config virtualenvs.create false
-
     - name: Cache Poetry dependencies
       uses: actions/cache@v2
       with:
@@ -78,6 +73,9 @@ runs:
         key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
         restore-keys: |
           ${{ runner.os }}-poetry-
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
 
     - name: Install Cover-Agent
       run: pip install git+https://github.com/Codium-ai/cover-agent.git
