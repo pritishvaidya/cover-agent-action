@@ -241,10 +241,10 @@ function runCoverageCheck(testDir, testCommand, coverageType, desiredCoverage, m
     return new Promise((resolve, reject) => {
         const command = `cover-agent \
       --source-file-path "${testDir.path}" \
-      --test-file-path "${testDir.test}" \  
+      --test-file-path "${testDir.test}" \
       --code-coverage-report-path "./coverage/cobertura-coverage.xml" \
       --test-command "${testCommand}" \
-      --test-command-dir "${testDir}" \
+      --test-command-dir "${testDir.test}" \
       --coverage-type "${coverageType}" \
       --desired-coverage ${desiredCoverage} \
       --max-iterations ${maxIterations}`;
