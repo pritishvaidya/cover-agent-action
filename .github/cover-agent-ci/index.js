@@ -60,10 +60,10 @@ async function run() {
         }
 
         // Step 1: Upload initial test results
-        await uploadTestResults();
+        // await uploadTestResults();
 
         // Step 2: Save initial coverage report
-        await saveCoverageReport('./initial-coverage.xml');
+        // await saveCoverageReport('./initial-coverage.xml');
 
         // Fetch previous PR details
         console.log('Fetch previous PR details')
@@ -72,7 +72,7 @@ async function run() {
             repo,
             pull_number: prNumber,
         });
-        console.log('Fetched previous PR details')
+        console.log('Fetched previous PR details', { previousPR, owner, repo, prNumber });
 
         const previousBranchName = previousPR.head.ref;
         const newBranchName = `${previousBranchName}-test`;
