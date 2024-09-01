@@ -53,12 +53,11 @@ async function run() {
         const octokit = new Octokit({ auth: core.getInput('github-token') });
 
         // Get OPEN_API_KEY from environment variables
-        const openApiKey = process.env.OPENAI_API_KEY;
+        const openApiKey = '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';
         if (!openApiKey) {
             core.setFailed('OPEN_API_KEY environment variable is not set.');
             return;
         }
-        console.log(`OPEN_API_KEY: ${openApiKey}`); // Be cautious with logging sensitive information
 
         // Step 1: Upload initial test results
         await uploadTestResults();
