@@ -81,11 +81,12 @@ runs:
 
     - name: Run Cover Agent Action
       uses: pritishvaidya/cover-agent-action/.github/cover-agent-ci@master
-      with:
+      env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         PR_GITHUB_TOKEN: ${{ inputs.pr-github-token }}
         GITHUB_REPOSITORY: ${{ github.repository }}
         GITHUB_REF: ${{ github.ref }}
+      secrets:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
     - name: Upload test results
