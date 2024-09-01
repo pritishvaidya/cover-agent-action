@@ -66,7 +66,7 @@ async function run() {
         // await saveCoverageReport('./initial-coverage.xml');
 
         // Fetch previous PR details
-        console.log('Fetch previous PR details')
+        console.log(`Fetching PR details from repo: ${owner}/${repo} with PR number: ${prNumber}`);
         const { data: previousPR } = await octokit.pulls.get({
             owner,
             repo,
