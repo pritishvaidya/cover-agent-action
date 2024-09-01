@@ -105,7 +105,7 @@ async function run() {
             console.log(`Processing file: ${filePath}`);
             const testDir = findTestDirectory(filePath);
             if (testDir) {
-                testDirs.add(testDir);
+                testDirs.add({ path: filePath, test: testDir });
             }
         });
 
@@ -240,6 +240,8 @@ function findTestDirectory(filePath) {
 function runCoverageCheck(testDir, testCommand, coverageType, desiredCoverage, maxIterations) {
     return new Promise((resolve, reject) => {
         const command = `cover-agent \
+      --source-file-path "${testDir.path}" \
+      --test-file-path "${testDir.test}" \  
       --code-coverage-report-path "./coverage/cobertura-coverage.xml" \
       --test-command "${testCommand}" \
       --test-command-dir "${testDir}" \

@@ -90,6 +90,7 @@ runs:
         githubToken: ${{ inputs.githubToken }}
         prGithubToken: ${{ inputs.prGithubToken }}
         runCoverAgent: 'true'
+        coverageType: 'cobertura'
         sourceDir: ${{ inputs.sourceDir }}
 
 
