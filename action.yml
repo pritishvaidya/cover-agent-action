@@ -53,6 +53,10 @@ runs:
       with:
         node-version: ${{ inputs.node-version }}
 
+    - name: Install Node.js dependencies
+      shell: sh
+      run: npm install @actions/core @actions/exec @octokit/rest
+
     - name: Set environment variable for Git SHA
       shell: sh
       run: echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)" >> $GITHUB_ENV

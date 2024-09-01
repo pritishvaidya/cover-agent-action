@@ -36,16 +36,6 @@ function execPromise(command) {
     });
 }
 
-// Function to install dependencies
-async function installDependencies() {
-    console.log('Installing dependencies...');
-    try {
-        await execPromise('npm install');
-    } catch (error) {
-        core.setFailed(`Failed to install dependencies: ${error.message}`);
-    }
-}
-
 // Main function
 async function run() {
     try {
@@ -53,9 +43,6 @@ async function run() {
             core.setFailed('This action can only be run in the context of a pull request.');
             return;
         }
-
-        // Install dependencies
-        await installDependencies();
 
         const testCommand = core.getInput('test-command');
         const coverageType = core.getInput('coverage-type');
