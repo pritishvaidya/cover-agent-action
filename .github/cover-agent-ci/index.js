@@ -227,7 +227,8 @@ function findTestDirectory(filePath) {
     const fileDir = path.dirname(filePath);
 
     for (const testDir of possibleTestDirs) {
-        const testDirPath = path.join(fileDir, testDir);
+        const testDirPath = path.join(fileDir, '..', testDir);
+        console.log(`${testDirPath}`);
         if (fs.existsSync(testDirPath) && fs.readdirSync(testDirPath).length > 0) {
             return testDirPath;
         }

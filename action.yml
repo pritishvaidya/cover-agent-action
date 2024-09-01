@@ -84,7 +84,7 @@ runs:
       with:
         testCommand: 'yarn test:unit:checkout2:offers:ci'
         desiredCoverage: '100'
-        maxIterations: '10'
+        maxIterations: '1'
         codeCoverageReportPath: './coverage/cobertura-coverage.xml'
         testCommandDir: '.'
         githubToken: ${{ inputs.githubToken }}
