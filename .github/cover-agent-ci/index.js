@@ -80,6 +80,7 @@ async function run() {
         } catch (error) {
             console.log({ error })
         }
+        console.log({ previousPR })
 
         const previousBranchName = previousPR.head.ref;
         const newBranchName = `${previousBranchName}-test`;
@@ -94,7 +95,7 @@ async function run() {
             repo,
             pull_number: prNumber,
         });
-        console.log('Fetched changed files in the PR')
+        console.log('Fetched changed files in the PR', changedFiles)
 
         const filePaths = changedFiles.map(file => file.filename);
         const testDirs = new Set();
@@ -118,7 +119,7 @@ async function run() {
         await saveCoverageReport('./updated-coverage.xml');
 
         // Step 5: Upload updated coverage reports
-        await uploadCoverageReports();
+        // await uploadCoverageReports();
 
         // Step 6: Compare coverage reports
         const coverageSummary = await compareCoverageReports();
@@ -214,7 +215,7 @@ async function createPRWithChanges(branchName, title, body) {
             title,
             body,
             head: branchName,
-            base: 'main', // Change if necessary
+            base: 'master', // Change if necessary
         });
     } catch (error) {
         core.setFailed(`Failed to create PR: ${error.message}`);
