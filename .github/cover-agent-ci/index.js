@@ -44,13 +44,15 @@ async function run() {
             return;
         }
 
-        const testCommand = core.getInput('test-command');
-        const coverageType = core.getInput('coverage-type');
-        const desiredCoverage = core.getInput('desired-coverage');
-        const maxIterations = core.getInput('max-iterations');
+        const testCommand = core.getInput('testCommand');
+        const coverageType = core.getInput('coverageType');
+        const desiredCoverage = core.getInput('desiredCoverage');
+        const maxIterations = core.getInput('maxIterations');
+        console.log({ testCommand, coverageType, desiredCoverage, maxIterations, env: { token: process.env.GITHUB_TOKEN, prToken: process.env.GITHUB_PR_TOKEN  } })
         const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-        const prNumber = process.env.GITHUB_REF.split('/').pop();
-        const octokit = new Octokit({ auth: core.getInput('github-token') });
+        const refParts = process.env.GITHUB_REF.split('/');
+        const prNumber = refParts[2]; // PR number is the second part of the path
+        const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
         // Get OPEN_API_KEY from environment variables
         const openApiKey = process.env.OPENAI_API_KEY;
@@ -58,20 +60,27 @@ async function run() {
             core.setFailed('OPEN_API_KEY environment variable is not set.');
             return;
         }
-        console.log(`OPEN_API_KEY: ${openApiKey}`); // Be cautious with logging sensitive information
 
         // Step 1: Upload initial test results
-        await uploadTestResults();
+        // await uploadTestResults();
 
         // Step 2: Save initial coverage report
-        await saveCoverageReport('./coverage/initial-coverage.xml');
+        // await saveCoverageReport('./initial-coverage.xml');
 
         // Fetch previous PR details
-        const { data: previousPR } = await octokit.pulls.get({
-            owner,
-            repo,
-            pull_number: prNumber,
-        });
+        let previousPR = ''
+        console.log(`Fetching PR details from repo: ${owner}/${repo} with PR number:`, { owner, repo, prNumber, env: process.env.GITHUB_REF });
+        try {
+            const { data } = await octokit.pulls.get({
+                owner,
+                repo,
+                pull_number: prNumber,
+            });
+            previousPR = data;
+        } catch (error) {
+            console.log({ error })
+        }
+        console.log({ previousPR })
 
         const previousBranchName = previousPR.head.ref;
         const newBranchName = `${previousBranchName}-test`;
@@ -80,11 +89,13 @@ async function run() {
         const newPRBody = `This PR is created for testing purposes based on the previous branch: ${previousBranchName}.`;
 
         // Fetch changed files in the PR
+        console.log('Fetch changed files in the PR')
         const { data: changedFiles } = await octokit.pulls.listFiles({
             owner,
             repo,
             pull_number: prNumber,
         });
+        console.log('Fetched changed files in the PR', changedFiles)
 
         const filePaths = changedFiles.map(file => file.filename);
         const testDirs = new Set();
@@ -94,7 +105,7 @@ async function run() {
             console.log(`Processing file: ${filePath}`);
             const testDir = findTestDirectory(filePath);
             if (testDir) {
-                testDirs.add(testDir);
+                testDirs.add({ path: filePath, test: testDir });
             }
         });
 
@@ -105,7 +116,7 @@ async function run() {
         }
 
         // Step 4: Save updated coverage report
-        await saveCoverageReport('./coverage/updated-coverage.xml');
+        await saveCoverageReport('./updated-coverage.xml');
 
         // Step 5: Upload updated coverage reports
         await uploadCoverageReports();
@@ -114,10 +125,10 @@ async function run() {
         const coverageSummary = await compareCoverageReports();
 
         // Step 7: Comment on the PR
-        await commentOnPR(prNumber, coverageSummary);
+        // await commentOnPR(prNumber, coverageSummary);
 
         // Step 8: Create a PR with changes
-        await createPRWithChanges(newBranchName, newPRTitle, newPRBody);
+        // await createPRWithChanges(newBranchName, newPRTitle, newPRBody);
 
     } catch (error) {
         core.setFailed(`Action failed with error: ${error.message}`);
@@ -133,20 +144,31 @@ async function uploadTestResults() {
     }
 }
 
+async function listCoverageDirectory() {
+    try {
+        console.log('Listing contents of the coverage directory');
+        await execPromise('ls -la ./coverage');
+    } catch (error) {
+        core.setFailed(`Failed to list coverage directory: ${error.message}`);
+    }
+}
+
 async function saveCoverageReport(reportPath) {
     try {
+        // Debugging: List coverage directory
+        console.log('Listing contents of the coverage directory');
         console.log(`Saving coverage report to ${reportPath}`);
-        // Implement the logic to save or copy coverage reports
     } catch (error) {
         core.setFailed(`Failed to save coverage report: ${error.message}`);
     }
 }
 
+
 async function uploadCoverageReports() {
     try {
         console.log('Uploading coverage reports as artifacts');
-        await execPromise('gh actions upload-artifact ./coverage/initial-coverage.xml --name initial-coverage');
-        await execPromise('gh actions upload-artifact ./coverage/updated-coverage.xml --name updated-coverage');
+        await execPromise('gh actions upload-artifact ./initial-coverage.xml --name initial-coverage');
+        await execPromise('gh actions upload-artifact ./updated-coverage.xml --name updated-coverage');
     } catch (error) {
         core.setFailed(`Failed to upload coverage reports: ${error.message}`);
     }
@@ -166,7 +188,7 @@ async function compareCoverageReports() {
 async function commentOnPR(prNumber, coverageSummary) {
     try {
         const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-        const octokit = new Octokit({ auth: core.getInput('github-token') });
+        const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
         console.log('Commenting on PR with coverage summary');
         await octokit.issues.createComment({
@@ -183,7 +205,7 @@ async function commentOnPR(prNumber, coverageSummary) {
 async function createPRWithChanges(branchName, title, body) {
     try {
         const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-        const octokit = new Octokit({ auth: core.getInput('github-token') });
+        const octokit = new Octokit({ auth:  process.env.GITHUB_PR_TOKEN });
 
         console.log(`Creating PR from branch: ${branchName}`);
 
@@ -193,7 +215,7 @@ async function createPRWithChanges(branchName, title, body) {
             title,
             body,
             head: branchName,
-            base: 'main', // Change if necessary
+            base: 'master', // Change if necessary
         });
     } catch (error) {
         core.setFailed(`Failed to create PR: ${error.message}`);
@@ -205,7 +227,8 @@ function findTestDirectory(filePath) {
     const fileDir = path.dirname(filePath);
 
     for (const testDir of possibleTestDirs) {
-        const testDirPath = path.join(fileDir, testDir);
+        const testDirPath = path.join(fileDir, '..', testDir);
+        console.log(`${testDirPath}`);
         if (fs.existsSync(testDirPath) && fs.readdirSync(testDirPath).length > 0) {
             return testDirPath;
         }
@@ -216,10 +239,12 @@ function findTestDirectory(filePath) {
 
 function runCoverageCheck(testDir, testCommand, coverageType, desiredCoverage, maxIterations) {
     return new Promise((resolve, reject) => {
-        const command = `npx cover-agent \
+        const command = `cover-agent \
+      --source-file-path "${testDir.path}" \
+      --test-file-path "${testDir.test}/${testDir.path.split("/").pop().replace(/\.ts$/, '.test.ts')}" \
       --code-coverage-report-path "./coverage/cobertura-coverage.xml" \
       --test-command "${testCommand}" \
-      --test-command-dir "${testDir}" \
+      --test-command-dir "${testDir.test}" \
       --coverage-type "${coverageType}" \
       --desired-coverage ${desiredCoverage} \
       --max-iterations ${maxIterations}`;

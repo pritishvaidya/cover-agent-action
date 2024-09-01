@@ -80,12 +80,18 @@ runs:
       run: pip install git+https://github.com/Codium-ai/cover-agent.git
 
     - name: Run Cover Agent Action
-      uses: pritishvaidya/cover-agent-action/.github/cover-agent-ci@master
-      env:
-        GITHUB_TOKEN: ${{ inputs.github-token }}
-        PR_GITHUB_TOKEN: ${{ inputs.pr-github-token }}
-        GITHUB_REPOSITORY: ${{ github.repository }}
-        GITHUB_REF: ${{ github.ref }}
+      uses: pritishvaidya/cover-agent-action/.github/cover-agent-ci@secret
+      with:
+        testCommand: 'npm run v2:test:unit:ai:ci'
+        desiredCoverage: '100'
+        maxIterations: '1'
+        codeCoverageReportPath: './coverage/cobertura-coverage.xml'
+        testCommandDir: '.'
+        githubToken: ${{ inputs.githubToken }}
+        prGithubToken: ${{ inputs.prGithubToken }}
+        runCoverAgent: 'true'
+        coverageType: 'cobertura'
+        sourceDir: ${{ inputs.sourceDir }}
 
 
     - name: Upload test results
@@ -94,14 +100,25 @@ runs:
         name: test-results
         path: ./test-results
 
-    - name: Upload initial coverage report
-      uses: actions/upload-artifact@v3
-      with:
-        name: initial-coverage
-        path: ./coverage/initial-coverage.xml
+#    - name: Upload initial coverage report
+#      uses: actions/upload-artifact@v3
+#      with:
+#        name: initial-coverage
+#        path: ./initial-coverage.xml
+#
+#    - name: Upload updated coverage report
+#      uses: actions/upload-artifact@v3
+#      with:
+#        name: updated-coverage
+#        path: ./updated-coverage.xml
 
-    - name: Upload updated coverage report
-      uses: actions/upload-artifact@v3
+    - name: Create PR with changes
+      id: create-pr
+      uses: peter-evans/create-pull-request@v6
       with:
-        name: updated-coverage
-        path: ./coverage/updated-coverage.xml
+        branch: "cover-agent/${{ github.head_ref || github.ref_name }}"
+        base: ${{ github.head_ref || github.ref_name }}
+        commit-message: Add generated tests
+        title: "Generated test for PR #${{ github.event.number }}"
+        token: ${{ inputs.prgithubToken }}
+        draft: true
