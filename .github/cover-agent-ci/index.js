@@ -36,6 +36,16 @@ function execPromise(command) {
     });
 }
 
+// Function to install dependencies
+async function installDependencies() {
+    console.log('Installing dependencies...');
+    try {
+        await execPromise('npm install');
+    } catch (error) {
+        core.setFailed(`Failed to install dependencies: ${error.message}`);
+    }
+}
+
 // Main function
 async function run() {
     try {
@@ -44,13 +54,16 @@ async function run() {
             return;
         }
 
+        // Install dependencies
+        await installDependencies();
+
         const testCommand = core.getInput('test-command');
         const coverageType = core.getInput('coverage-type');
         const desiredCoverage = core.getInput('desired-coverage');
         const maxIterations = core.getInput('max-iterations');
         const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
         const prNumber = process.env.GITHUB_REF.split('/').pop();
-        const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+        const octokit = new Octokit({ auth: core.getInput('github-token') });
 
         // Get OPEN_API_KEY from environment variables
         const openApiKey = process.env.OPENAI_API_KEY;
@@ -166,7 +179,7 @@ async function compareCoverageReports() {
 async function commentOnPR(prNumber, coverageSummary) {
     try {
         const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-        const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+        const octokit = new Octokit({ auth: core.getInput('github-token') });
 
         console.log('Commenting on PR with coverage summary');
         await octokit.issues.createComment({
@@ -183,7 +196,7 @@ async function commentOnPR(prNumber, coverageSummary) {
 async function createPRWithChanges(branchName, title, body) {
     try {
         const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-        const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+        const octokit = new Octokit({ auth: core.getInput('github-token') });
 
         console.log(`Creating PR from branch: ${branchName}`);
 
