@@ -86,6 +86,7 @@ runs:
         PR_GITHUB_TOKEN: ${{ inputs.pr-github-token }}
         GITHUB_REPOSITORY: ${{ github.repository }}
         GITHUB_REF: ${{ github.ref }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
     - name: Upload test results
       uses: actions/upload-artifact@v3
