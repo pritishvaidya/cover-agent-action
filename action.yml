@@ -84,7 +84,7 @@ runs:
       run: pip install git+https://github.com/Codium-ai/cover-agent.git
 
     - name: Run index.js
-      run: node ./index.js
+      uses: pritishvaidya/cover-agent-action/.github/cover-agent-ci
       shell: sh
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
