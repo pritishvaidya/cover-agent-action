@@ -29,7 +29,7 @@ function execPromise(command) {
             if (code !== 0) {
                 reject(new Error(`Command exited with code ${code}: ${stderr}`));
             } else {
-                resolve(code);
+                resolve(stdout);
             }
         });
     });
@@ -50,62 +50,57 @@ async function run() {
         const refParts = process.env.GITHUB_REF.split('/');
         const prNumber = refParts[2]; // PR number is the second part of the path
 
-        // Step 1: Upload initial test results
-        // await uploadTestResults();
-
-        // Step 2: Save initial coverage report
-        // await saveCoverageReport('./initial-coverage.xml');
-
         // Fetch PR details using GitHub CLI
-        let previousPR = '';
+        let previousBranchName = '';
         console.log(`Fetching PR details with PR number: ${prNumber}`);
         try {
-            const { stdout } = await execPromise(`gh pr view ${prNumber} --json headRefName --jq '.head.ref'`);
-            const previousBranchName = stdout.trim();
-            const newBranchName = `${previousBranchName}-test`;
-
-            const newPRTitle = `Test Coverage for ${previousBranchName}`;
-            const newPRBody = `This PR is created for testing purposes based on the previous branch: ${previousBranchName}.`;
-
-            // Fetch changed files in the PR
-            console.log('Fetching changed files in the PR');
-            const { stdout: changedFilesStdout } = await execPromise(`gh pr diff ${prNumber} --name-only`);
-            const filePaths = changedFilesStdout.split('\n').filter(Boolean);
-            const testDirs = new Set();
-
-            console.log(`Changed files in PR #${prNumber}:`);
-            filePaths.forEach(filePath => {
-                console.log(`Processing file: ${filePath}`);
-                const testDir = findTestDirectory(filePath);
-                if (testDir) {
-                    testDirs.add(testDir);
-                }
-            });
-
-            // Step 3: Run coverage check for each test directory
-            for (const testDir of testDirs) {
-                console.log(`Running coverage check in directory: ${testDir}`);
-                await runCoverageCheck(testDir, testCommand, coverageType, desiredCoverage, maxIterations);
-            }
-
-            // Step 4: Save updated coverage report
-            await saveCoverageReport('./updated-coverage.xml');
-
-            // Step 5: Upload updated coverage reports
-            await uploadCoverageReports();
-
-            // Step 6: Compare coverage reports
-            const coverageSummary = await compareCoverageReports();
-
-            // Step 7: Comment on the PR
-            await commentOnPR(prNumber, coverageSummary);
-
-            // Step 8: Create a PR with changes
-            await createPRWithChanges(newBranchName, newPRTitle, newPRBody);
+            const { stdout } = await execPromise(`gh pr view ${prNumber} --json headRefName --jq '.headRefName'`);
+            previousBranchName = stdout.trim();
         } catch (error) {
-            console.error('Error fetching PR details or files:', error.message);
-            core.setFailed(`Failed with error: ${error.message}`);
+            console.error('Error fetching PR details:', error.message);
+            core.setFailed(`Failed to fetch PR details: ${error.message}`);
+            return;
         }
+
+        const newBranchName = `${previousBranchName}-test`;
+        const newPRTitle = `Test Coverage for ${previousBranchName}`;
+        const newPRBody = `This PR is created for testing purposes based on the previous branch: ${previousBranchName}.`;
+
+        // Fetch changed files in the PR
+        console.log('Fetching changed files in the PR');
+        const { stdout: changedFilesStdout } = await execPromise(`gh pr diff ${prNumber} --name-only`);
+        const filePaths = changedFilesStdout.split('\n').filter(Boolean);
+        const testDirs = new Set();
+
+        console.log(`Changed files in PR #${prNumber}:`);
+        filePaths.forEach(filePath => {
+            console.log(`Processing file: ${filePath}`);
+            const testDir = findTestDirectory(filePath);
+            if (testDir) {
+                testDirs.add(testDir);
+            }
+        });
+
+        // Step 3: Run coverage check for each test directory
+        for (const testDir of testDirs) {
+            console.log(`Running coverage check in directory: ${testDir}`);
+            await runCoverageCheck(testDir, testCommand, coverageType, desiredCoverage, maxIterations);
+        }
+
+        // Step 4: Save updated coverage report
+        await saveCoverageReport('./updated-coverage.xml');
+
+        // Step 5: Upload updated coverage reports
+        await uploadCoverageReports();
+
+        // Step 6: Compare coverage reports
+        const coverageSummary = await compareCoverageReports();
+
+        // Step 7: Comment on the PR
+        await commentOnPR(prNumber, coverageSummary);
+
+        // Step 8: Create a PR with changes
+        await createPRWithChanges(newBranchName, newPRTitle, newPRBody);
 
     } catch (error) {
         core.setFailed(`Action failed with error: ${error.message}`);
