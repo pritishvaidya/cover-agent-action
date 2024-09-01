@@ -1,6 +1,5 @@
 const core = require('@actions/core');
 const { exec } = require('child_process');
-const { Octokit } = require('@octokit/rest');
 const fs = require('fs');
 const path = require('path');
 
@@ -48,17 +47,8 @@ async function run() {
         const coverageType = core.getInput('coverage-type');
         const desiredCoverage = core.getInput('desired-coverage');
         const maxIterations = core.getInput('max-iterations');
-        const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
         const refParts = process.env.GITHUB_REF.split('/');
         const prNumber = refParts[2]; // PR number is the second part of the path
-        const octokit = new Octokit({ auth: core.getInput('github-token') });
-
-        // Get OPEN_API_KEY from environment variables
-        const openApiKey = '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';
-        if (!openApiKey) {
-            core.setFailed('OPEN_API_KEY environment variable is not set.');
-            return;
-        }
 
         // Step 1: Upload initial test results
         // await uploadTestResults();
@@ -66,67 +56,56 @@ async function run() {
         // Step 2: Save initial coverage report
         // await saveCoverageReport('./initial-coverage.xml');
 
-        // Fetch previous PR details
-        let previousPR = ''
-        console.log(`Fetching PR details from repo: ${owner}/${repo} with PR number:`, { owner, repo, prNumber, env: process.env.GITHUB_REF });
+        // Fetch PR details using GitHub CLI
+        let previousPR = '';
+        console.log(`Fetching PR details with PR number: ${prNumber}`);
         try {
-            const { data } = await octokit.pulls.get({
-                owner,
-                repo,
-                pull_number: prNumber,
+            const { stdout } = await execPromise(`gh pr view ${prNumber} --json head --jq '.head.ref'`);
+            const previousBranchName = stdout.trim();
+            const newBranchName = `${previousBranchName}-test`;
+
+            const newPRTitle = `Test Coverage for ${previousBranchName}`;
+            const newPRBody = `This PR is created for testing purposes based on the previous branch: ${previousBranchName}.`;
+
+            // Fetch changed files in the PR
+            console.log('Fetching changed files in the PR');
+            const { stdout: changedFilesStdout } = await execPromise(`gh pr diff ${prNumber} --name-only`);
+            const filePaths = changedFilesStdout.split('\n').filter(Boolean);
+            const testDirs = new Set();
+
+            console.log(`Changed files in PR #${prNumber}:`);
+            filePaths.forEach(filePath => {
+                console.log(`Processing file: ${filePath}`);
+                const testDir = findTestDirectory(filePath);
+                if (testDir) {
+                    testDirs.add(testDir);
+                }
             });
-            previousPR = data;
-        } catch (error) {
-            console.log({ error })
-        }
 
-        const previousBranchName = previousPR.head.ref;
-        const newBranchName = `${previousBranchName}-test`;
-
-        const newPRTitle = `Test Coverage for ${previousBranchName}`;
-        const newPRBody = `This PR is created for testing purposes based on the previous branch: ${previousBranchName}.`;
-
-        // Fetch changed files in the PR
-        console.log('Fetch changed files in the PR')
-        const { data: changedFiles } = await octokit.pulls.listFiles({
-            owner,
-            repo,
-            pull_number: prNumber,
-        });
-        console.log('Fetched changed files in the PR')
-
-        const filePaths = changedFiles.map(file => file.filename);
-        const testDirs = new Set();
-
-        console.log(`Changed files in PR #${prNumber}:`);
-        filePaths.forEach(filePath => {
-            console.log(`Processing file: ${filePath}`);
-            const testDir = findTestDirectory(filePath);
-            if (testDir) {
-                testDirs.add(testDir);
+            // Step 3: Run coverage check for each test directory
+            for (const testDir of testDirs) {
+                console.log(`Running coverage check in directory: ${testDir}`);
+                await runCoverageCheck(testDir, testCommand, coverageType, desiredCoverage, maxIterations);
             }
-        });
 
-        // Step 3: Run coverage check for each test directory
-        for (const testDir of testDirs) {
-            console.log(`Running coverage check in directory: ${testDir}`);
-            await runCoverageCheck(testDir, testCommand, coverageType, desiredCoverage, maxIterations);
+            // Step 4: Save updated coverage report
+            await saveCoverageReport('./updated-coverage.xml');
+
+            // Step 5: Upload updated coverage reports
+            await uploadCoverageReports();
+
+            // Step 6: Compare coverage reports
+            const coverageSummary = await compareCoverageReports();
+
+            // Step 7: Comment on the PR
+            await commentOnPR(prNumber, coverageSummary);
+
+            // Step 8: Create a PR with changes
+            await createPRWithChanges(newBranchName, newPRTitle, newPRBody);
+        } catch (error) {
+            console.error('Error fetching PR details or files:', error.message);
+            core.setFailed(`Failed with error: ${error.message}`);
         }
-
-        // Step 4: Save updated coverage report
-        await saveCoverageReport('./updated-coverage.xml');
-
-        // Step 5: Upload updated coverage reports
-        await uploadCoverageReports();
-
-        // Step 6: Compare coverage reports
-        const coverageSummary = await compareCoverageReports();
-
-        // Step 7: Comment on the PR
-        await commentOnPR(prNumber, coverageSummary);
-
-        // Step 8: Create a PR with changes
-        await createPRWithChanges(newBranchName, newPRTitle, newPRBody);
 
     } catch (error) {
         core.setFailed(`Action failed with error: ${error.message}`);
@@ -161,7 +140,6 @@ async function saveCoverageReport(reportPath) {
     }
 }
 
-
 async function uploadCoverageReports() {
     try {
         console.log('Uploading coverage reports as artifacts');
@@ -185,16 +163,8 @@ async function compareCoverageReports() {
 
 async function commentOnPR(prNumber, coverageSummary) {
     try {
-        const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-        const octokit = new Octokit({ auth: core.getInput('github-token') });
-
         console.log('Commenting on PR with coverage summary');
-        await octokit.issues.createComment({
-            owner,
-            repo,
-            issue_number: prNumber,
-            body: `### Coverage Summary\n\n${coverageSummary}`,
-        });
+        await execPromise(`gh pr comment ${prNumber} --body "### Coverage Summary\n\n${coverageSummary}"`);
     } catch (error) {
         core.setFailed(`Failed to comment on PR: ${error.message}`);
     }
@@ -202,19 +172,8 @@ async function commentOnPR(prNumber, coverageSummary) {
 
 async function createPRWithChanges(branchName, title, body) {
     try {
-        const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-        const octokit = new Octokit({ auth: core.getInput('github-token') });
-
         console.log(`Creating PR from branch: ${branchName}`);
-
-        await octokit.pulls.create({
-            owner,
-            repo,
-            title,
-            body,
-            head: branchName,
-            base: 'main', // Change if necessary
-        });
+        await execPromise(`gh pr create --head ${branchName} --base main --title "${title}" --body "${body}"`);
     } catch (error) {
         core.setFailed(`Failed to create PR: ${error.message}`);
     }
