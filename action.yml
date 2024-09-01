@@ -54,9 +54,8 @@ runs:
         node-version: ${{ inputs.node-version }}
 
     - name: Install dependencies
-      shell: sh
+      uses: pritishvaidya/cover-agent-action/.github/cover-agent-ci@master
       run: npm install
-      working-directory: .github/cover-agent-ci
 
     - name: Set environment variable for Git SHA
       shell: sh
