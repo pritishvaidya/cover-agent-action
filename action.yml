@@ -88,7 +88,6 @@ runs:
       shell: sh
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         PR_GITHUB_TOKEN: ${{ inputs.pr-github-token }}
         GITHUB_REPOSITORY: ${{ github.repository }}
         GITHUB_REF: ${{ github.ref }}

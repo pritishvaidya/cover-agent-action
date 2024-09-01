@@ -53,7 +53,7 @@ async function run() {
         const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
         // Get OPEN_API_KEY from environment variables
-        const openApiKey = process.env.OPEN_API_KEY;
+        const openApiKey = process.env.OPENAI_API_KEY;
         if (!openApiKey) {
             core.setFailed('OPEN_API_KEY environment variable is not set.');
             return;
