@@ -67,13 +67,18 @@ async function run() {
         // await saveCoverageReport('./initial-coverage.xml');
 
         // Fetch previous PR details
+        let previousPR = ''
         console.log(`Fetching PR details from repo: ${owner}/${repo} with PR number:`, { owner, repo, prNumber, env: process.env.GITHUB_REF });
-        const { data: previousPR } = await octokit.pulls.get({
-            owner,
-            repo,
-            pull_number: prNumber,
-        });
-        console.log('Fetched previous PR details', { previousPR, owner, repo, prNumber });
+        try {
+            const { data } = await octokit.pulls.get({
+                owner,
+                repo,
+                pull_number: prNumber,
+            });
+            previousPR = data;
+        } catch (error) {
+            console.log({ error })
+        }
 
         const previousBranchName = previousPR.head.ref;
         const newBranchName = `${previousBranchName}-test`;
