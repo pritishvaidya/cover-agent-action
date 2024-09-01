@@ -77,7 +77,6 @@ runs:
           ${{ runner.os }}-poetry-
 
     - name: Install Poetry
-      shell: sh
       uses: snok/install-poetry@v1
 
     - name: Install Cover-Agent
@@ -86,6 +85,7 @@ runs:
 
     - name: Run index.js
       run: node .github/actions/coverage-check/index.js
+      shell: sh
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
