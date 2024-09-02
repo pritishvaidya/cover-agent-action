@@ -145,10 +145,11 @@ async function getTestFiles(changedFiles, runner) {
     for (const file of changedFiles) {
         const command = `npx vitest run --config vitest.config.v2.mjs related ${file}`;
         try {
+            console.log(`Retrieving ${file} ${command}`);
+
             await execPromise(command);
             // Add logic to collect related test files here
             // For now, assuming we handle this simply
-            console.log(`Retrieving ${file}`);
             relatedTestFiles.push(file); // Modify as per actual logic
         } catch (error) {
             core.warning(`Failed to find related tests for ${file}: ${error.message}`);
