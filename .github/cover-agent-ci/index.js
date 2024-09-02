@@ -50,6 +50,7 @@ async function run() {
 
         // Ensure Vitest is installed and find its path
         const testPath = path.join(process.env.GITHUB_REPOSITORY, `node_modules/.bin/${runner}`);
+        console.log(`Test Path ${testPath}`)
         if (!fs.existsSync(testPath)) {
             core.setFailed(`${runner} is not installed in node_modules/.bin`);
             return;
