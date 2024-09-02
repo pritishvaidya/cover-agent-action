@@ -49,7 +49,7 @@ async function run() {
         const openApiKey = 'testKey' || process.env.OPENAI_API_KEY;
 
         // Ensure Vitest is installed and find its path
-        const testPath = path.join(process.env.GITHUB_WORKSPACE, `node_modules/.bin/${runner}`);
+        const testPath = path.join(process.env.GITHUB_REPOSITORY, `node_modules/.bin/${runner}`);
         if (!fs.existsSync(testPath)) {
             core.setFailed(`${runner} is not installed in node_modules/.bin`);
             return;
