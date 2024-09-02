@@ -74,6 +74,7 @@ async function run() {
             core.setFailed(`Failed to fetch changed files: ${error.message}`);
             return;
         }
+        console.log({ changedFiles, newBranchName, newPRTitle, newPRBody });
 
         const filePaths = changedFiles.map(file => file.filename);
         const testFiles = await getTestFiles(filePaths, runner);
@@ -136,12 +137,13 @@ async function compareCoverageReports() {
 
 async function getTestFiles(changedFiles, runner) {
     // Assuming your test files are located in a specific directory, adjust as necessary
+    console.log(`Getting test files from ${changedFiles} ${runner}`);
     const testDir = 'tests'; // Adjust to your test directory
     const relatedTestFiles = [];
 
     // You might want to use Jest to find related tests
     for (const file of changedFiles) {
-        const command = `npx ${runner} --findRelatedTests ${file}`;
+        const command = `npx vitest --config vitest.config.v2.mjs --findRelatedTests ${file}`;
         try {
             await execPromise(command);
             // Add logic to collect related test files here
