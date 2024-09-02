@@ -8,7 +8,6 @@ const path = require('path');
 function execPromise(command) {
     return new Promise((resolve, reject) => {
         const cmd = exec(command);
-
         let stdout = '';
         let stderr = '';
 
@@ -22,16 +21,9 @@ function execPromise(command) {
             process.stderr.write(data);
         });
 
-        cmd.on('error', (error) => {
-            reject(error);
-        });
-
+        cmd.on('error', (error) => reject(error));
         cmd.on('close', (code) => {
-            if (code !== 0) {
-                reject(new Error(`Command exited with code ${code}: ${stderr}`));
-            } else {
-                resolve(code);
-            }
+            code === 0 ? resolve(code) : reject(new Error(`Command exited with code ${code}: ${stderr}`));
         });
     });
 }
@@ -48,92 +40,70 @@ async function run() {
         const coverageType = core.getInput('coverageType');
         const desiredCoverage = core.getInput('desiredCoverage');
         const maxIterations = core.getInput('maxIterations');
-        console.log({ testCommand, coverageType, desiredCoverage, maxIterations, env: { token: process.env.GITHUB_TOKEN, prToken: process.env.GITHUB_PR_TOKEN  } })
+
         const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-        const refParts = process.env.GITHUB_REF.split('/');
-        const prNumber = refParts[2]; // PR number is the second part of the path
+        const prNumber = process.env.GITHUB_REF.split('/')[2];
         const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-        // Get OPEN_API_KEY from environment variables
         const openApiKey = process.env.OPENAI_API_KEY;
         if (!openApiKey) {
             core.setFailed('OPEN_API_KEY environment variable is not set.');
             return;
         }
 
-        // Step 1: Upload initial test results
-        // await uploadTestResults();
-
-        // Step 2: Save initial coverage report
-        // await saveCoverageReport('./initial-coverage.xml');
-
-        // Fetch previous PR details
-        let previousPR = ''
-        console.log(`Fetching PR details from repo: ${owner}/${repo} with PR number:`, { owner, repo, prNumber, env: process.env.GITHUB_REF });
+        let previousPR;
         try {
-            const { data } = await octokit.pulls.get({
-                owner,
-                repo,
-                pull_number: prNumber,
-            });
+            const { data } = await octokit.pulls.get({ owner, repo, pull_number: prNumber });
             previousPR = data;
         } catch (error) {
-            console.log({ error })
+            core.setFailed(`Failed to fetch PR details: ${error.message}`);
+            return;
         }
-        console.log({ previousPR })
 
         const previousBranchName = previousPR.head.ref;
         const newBranchName = `${previousBranchName}-test`;
-
         const newPRTitle = `Test Coverage for ${previousBranchName}`;
         const newPRBody = `This PR is created for testing purposes based on the previous branch: ${previousBranchName}.`;
 
-        // Fetch changed files in the PR
-        console.log('Fetch changed files in the PR')
-        const { data: changedFiles } = await octokit.pulls.listFiles({
-            owner,
-            repo,
-            pull_number: prNumber,
-        });
-        console.log('Fetched changed files in the PR', changedFiles)
+        let changedFiles;
+        try {
+            const { data } = await octokit.pulls.listFiles({ owner, repo, pull_number: prNumber });
+            changedFiles = data;
+        } catch (error) {
+            core.setFailed(`Failed to fetch changed files: ${error.message}`);
+            return;
+        }
 
         const filePaths = changedFiles.map(file => file.filename);
         const testDirs = new Set();
 
-        console.log(`Changed files in PR #${prNumber}:`);
         filePaths.forEach(filePath => {
-            console.log(`Processing file: ${filePath}`);
-            const testDir = findTestDirectory(filePath);
-            if (testDir) {
-                testDirs.add({ path: filePath, test: testDir });
+            if (!filePath.endsWith('.test')) {
+                const testDir = findTestDirectory(filePath);
+                if (testDir) {
+                    testDirs.add({ path: filePath, test: testDir });
+                }
             }
         });
 
-        // Step 3: Run coverage check for each test directory
         for (const testDir of testDirs) {
-            console.log(`Running coverage check in directory: ${testDir}`);
             await runCoverageCheck(testDir, testCommand, coverageType, desiredCoverage, maxIterations);
         }
 
-        // Step 4: Save updated coverage report
         await saveCoverageReport('./updated-coverage.xml');
-
-        // Step 5: Upload updated coverage reports
         await uploadCoverageReports();
-
-        // Step 6: Compare coverage reports
         const coverageSummary = await compareCoverageReports();
 
-        // Step 7: Comment on the PR
+        // Uncomment and implement the following lines as needed
         // await commentOnPR(prNumber, coverageSummary);
-
-        // Step 8: Create a PR with changes
         // await createPRWithChanges(newBranchName, newPRTitle, newPRBody);
 
     } catch (error) {
         core.setFailed(`Action failed with error: ${error.message}`);
     }
 }
+
+// Function implementations
 
 async function uploadTestResults() {
     try {
@@ -144,25 +114,13 @@ async function uploadTestResults() {
     }
 }
 
-async function listCoverageDirectory() {
-    try {
-        console.log('Listing contents of the coverage directory');
-        await execPromise('ls -la ./coverage');
-    } catch (error) {
-        core.setFailed(`Failed to list coverage directory: ${error.message}`);
-    }
-}
-
 async function saveCoverageReport(reportPath) {
     try {
-        // Debugging: List coverage directory
-        console.log('Listing contents of the coverage directory');
         console.log(`Saving coverage report to ${reportPath}`);
     } catch (error) {
         core.setFailed(`Failed to save coverage report: ${error.message}`);
     }
 }
-
 
 async function uploadCoverageReports() {
     try {
@@ -177,8 +135,7 @@ async function uploadCoverageReports() {
 async function compareCoverageReports() {
     try {
         console.log('Comparing coverage reports');
-        // Implement the logic to compare coverage reports
-        return 'Coverage comparison summary...'; // Replace with actual summary
+        return 'Coverage comparison summary...'; // Implement actual comparison logic
     } catch (error) {
         core.setFailed(`Failed to compare coverage reports: ${error.message}`);
         return 'Error comparing coverage reports';
@@ -205,7 +162,7 @@ async function commentOnPR(prNumber, coverageSummary) {
 async function createPRWithChanges(branchName, title, body) {
     try {
         const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-        const octokit = new Octokit({ auth:  process.env.GITHUB_PR_TOKEN });
+        const octokit = new Octokit({ auth: process.env.GITHUB_PR_TOKEN });
 
         console.log(`Creating PR from branch: ${branchName}`);
 
@@ -228,7 +185,6 @@ function findTestDirectory(filePath) {
 
     for (const testDir of possibleTestDirs) {
         const testDirPath = path.join(fileDir, '..', testDir);
-        console.log(`${testDirPath}`);
         if (fs.existsSync(testDirPath) && fs.readdirSync(testDirPath).length > 0) {
             return testDirPath;
         }
@@ -241,7 +197,7 @@ function runCoverageCheck(testDir, testCommand, coverageType, desiredCoverage, m
     return new Promise((resolve, reject) => {
         const command = `cover-agent \
       --source-file-path "${testDir.path}" \
-      --test-file-path "${testDir.test}/${testDir.path.split("/").pop().replace(/\.ts$/, '.test.ts')}" \
+      --test-file-path "${testDir.test}/${testDir.path.split("/").pop().replace(/\\.ts$/, '.test.ts')}" \
       --code-coverage-report-path "./coverage/cobertura-coverage.xml" \
       --test-command "${testCommand}" \
       --test-command-dir "${testDir.test}" \
