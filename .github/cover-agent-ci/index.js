@@ -152,7 +152,7 @@ async function getTestFiles(changedFiles, testPath) {
 
     // You might want to use Jest to find related tests
     for (const file of changedFiles) {
-        const command = `npx ${testPath} run --config vitest.config.v2.mjs related ${file}`;
+        const command = `cd ~/.npm npx ${testPath} run --config vitest.config.v2.mjs related ${file}`;
         try {
             console.log(`Retrieving ${file} ${command}`);
 
