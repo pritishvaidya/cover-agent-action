@@ -92,6 +92,7 @@ runs:
         runCoverAgent: 'true'
         coverageType: 'cobertura'
         sourceDir: ${{ inputs.sourceDir }}
+        runner: ${{ inputs.runner }}
 
 
     - name: Upload test results

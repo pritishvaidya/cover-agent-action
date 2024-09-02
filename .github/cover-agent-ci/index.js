@@ -40,12 +40,13 @@ async function run() {
         const coverageType = core.getInput('coverageType');
         const desiredCoverage = core.getInput('desiredCoverage');
         const maxIterations = core.getInput('maxIterations');
+        const runner = core.getInput('runner');
 
         const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
         const prNumber = process.env.GITHUB_REF.split('/')[2];
         const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-        const openApiKey = process.env.OPENAI_API_KEY;
+        const openApiKey = 'testKey' || process.env.OPENAI_API_KEY;
         if (!openApiKey) {
             core.setFailed('OPEN_API_KEY environment variable is not set.');
             return;
@@ -75,19 +76,10 @@ async function run() {
         }
 
         const filePaths = changedFiles.map(file => file.filename);
-        const testDirs = new Set();
+        const testFiles = await getTestFiles(filePaths, runner);
 
-        filePaths.forEach(filePath => {
-            if (!filePath.endsWith('.test')) {
-                const testDir = findTestDirectory(filePath);
-                if (testDir) {
-                    testDirs.add({ path: filePath, test: testDir });
-                }
-            }
-        });
-
-        for (const testDir of testDirs) {
-            await runCoverageCheck(testDir, testCommand, coverageType, desiredCoverage, maxIterations);
+        for (const testFile of testFiles) {
+            await runCoverageCheck(testFile, testCommand, coverageType, desiredCoverage, maxIterations);
         }
 
         await saveCoverageReport('./updated-coverage.xml');
@@ -142,6 +134,28 @@ async function compareCoverageReports() {
     }
 }
 
+async function getTestFiles(changedFiles, runner) {
+    // Assuming your test files are located in a specific directory, adjust as necessary
+    const testDir = 'tests'; // Adjust to your test directory
+    const relatedTestFiles = [];
+
+    // You might want to use Jest to find related tests
+    for (const file of changedFiles) {
+        const command = `npx ${runner} --findRelatedTests ${file}`;
+        try {
+            await execPromise(command);
+            // Add logic to collect related test files here
+            // For now, assuming we handle this simply
+            console.log(`Retrieving ${file}`);
+            relatedTestFiles.push(file); // Modify as per actual logic
+        } catch (error) {
+            core.warning(`Failed to find related tests for ${file}: ${error.message}`);
+        }
+    }
+
+    return relatedTestFiles;
+}
+
 async function commentOnPR(prNumber, coverageSummary) {
     try {
         const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
@@ -179,43 +193,28 @@ async function createPRWithChanges(branchName, title, body) {
     }
 }
 
-function findTestDirectory(filePath) {
-    const possibleTestDirs = ['__tests__', 'tests']; // Adjust based on your project structure
-    const fileDir = path.dirname(filePath);
-
-    for (const testDir of possibleTestDirs) {
-        const testDirPath = path.join(fileDir, '..', testDir);
-        if (fs.existsSync(testDirPath) && fs.readdirSync(testDirPath).length > 0) {
-            return testDirPath;
-        }
-    }
-
-    return null;
-}
-
-function runCoverageCheck(testDir, testCommand, coverageType, desiredCoverage, maxIterations) {
+function runCoverageCheck(file, testFile, testCommand, coverageType, desiredCoverage, maxIterations) {
     return new Promise((resolve, reject) => {
         const command = `cover-agent \
-      --source-file-path "${testDir.path}" \
-      --test-file-path "${testDir.test}/${testDir.path.split("/").pop().replace(/\\.ts$/, '.test.ts')}" \
-      --code-coverage-report-path "./coverage/cobertura-coverage.xml" \
-      --test-command "${testCommand}" \
-      --test-command-dir "${testDir.test}" \
-      --coverage-type "${coverageType}" \
-      --desired-coverage ${desiredCoverage} \
-      --max-iterations ${maxIterations}`;
+          --source-file-path "${file}" \
+          --test-file-path "${testFile}" \
+          --code-coverage-report-path "./coverage/cobertura-coverage.xml" \
+          --test-command "${testCommand}" \
+          --coverage-type "${coverageType}" \
+          --desired-coverage ${desiredCoverage} \
+          --max-iterations ${maxIterations}`;
 
         console.log(`Executing command: ${command}`);
 
-        execPromise(command)
-            .then((code) => {
-                console.log(`cover-agent exited with code ${code}`);
-                resolve(code);
-            })
-            .catch((error) => {
-                console.error(`Error: ${error.message}`);
-                reject(error);
-            });
+        // execPromise(command)
+        //     .then((code) => {
+        //         console.log(`cover-agent exited with code ${code}`);
+        //         resolve(code);
+        //     })
+        //     .catch((error) => {
+        //         console.error(`Error: ${error.message}`);
+        //         reject(error);
+        //     });
     });
 }
 
