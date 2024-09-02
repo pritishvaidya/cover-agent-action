@@ -47,6 +47,14 @@ async function run() {
         const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
         const openApiKey = 'testKey' || process.env.OPENAI_API_KEY;
+
+        // Ensure Vitest is installed and find its path
+        const testPath = path.join(process.env.GITHUB_WORKSPACE, `node_modules/.bin/${runner}`);
+        if (!fs.existsSync(testPath)) {
+            core.setFailed(`${runner} is not installed in node_modules/.bin`);
+            return;
+        }
+
         if (!openApiKey) {
             core.setFailed('OPEN_API_KEY environment variable is not set.');
             return;
@@ -77,7 +85,7 @@ async function run() {
         console.log({ changedFiles, newBranchName, newPRTitle, newPRBody });
 
         const filePaths = changedFiles.map(file => file.filename);
-        const testFiles = await getTestFiles(filePaths, runner);
+        const testFiles = await getTestFiles(filePaths, testPath);
 
         for (const testFile of testFiles) {
             await runCoverageCheck(testFile, testCommand, coverageType, desiredCoverage, maxIterations);
@@ -135,15 +143,15 @@ async function compareCoverageReports() {
     }
 }
 
-async function getTestFiles(changedFiles, runner) {
+async function getTestFiles(changedFiles, testPath) {
     // Assuming your test files are located in a specific directory, adjust as necessary
-    console.log(`Getting test files from ${changedFiles} ${runner}`);
+    console.log(`Getting test files from ${changedFiles} ${testPath}`);
     const testDir = 'tests'; // Adjust to your test directory
     const relatedTestFiles = [];
 
     // You might want to use Jest to find related tests
     for (const file of changedFiles) {
-        const command = `npx vitest run --config vitest.config.v2.mjs related ${file}`;
+        const command = `npx ${testPath} run --config vitest.config.v2.mjs related ${file}`;
         try {
             console.log(`Retrieving ${file} ${command}`);
 
