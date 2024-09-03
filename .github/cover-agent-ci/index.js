@@ -49,12 +49,8 @@ async function run() {
         const openApiKey = 'testKey' || process.env.OPENAI_API_KEY;
 
         // Ensure Vitest is installed and find its path
-        const testPath = path.join(process.env.GITHUB_REPOSITORY, `node_modules/.bin/${runner}`);
-        console.log(`Test Path ${testPath}`)
-        if (!fs.existsSync(testPath)) {
-            core.setFailed(`${runner} is not installed in node_modules/.bin`);
-            return;
-        }
+        const runnerPath = path.join(`cd ~/.npm npx ${runner}`);
+        console.log(`Test Path ${runnerPath}`)
 
         if (!openApiKey) {
             core.setFailed('OPEN_API_KEY environment variable is not set.');
@@ -86,7 +82,7 @@ async function run() {
         console.log({ changedFiles, newBranchName, newPRTitle, newPRBody });
 
         const filePaths = changedFiles.map(file => file.filename);
-        const testFiles = await getTestFiles(filePaths, testPath);
+        const testFiles = await getTestFiles(filePaths, runnerPath);
 
         for (const testFile of testFiles) {
             await runCoverageCheck(testFile, testCommand, coverageType, desiredCoverage, maxIterations);
@@ -144,15 +140,15 @@ async function compareCoverageReports() {
     }
 }
 
-async function getTestFiles(changedFiles, testPath) {
+async function getTestFiles(changedFiles, runner) {
     // Assuming your test files are located in a specific directory, adjust as necessary
-    console.log(`Getting test files from ${changedFiles} ${testPath}`);
+    console.log(`Getting test files from ${changedFiles} ${runner}`);
     const testDir = 'tests'; // Adjust to your test directory
     const relatedTestFiles = [];
 
     // You might want to use Jest to find related tests
     for (const file of changedFiles) {
-        const command = `cd ~/.npm npx ${testPath} run --config vitest.config.v2.mjs related ${file}`;
+        const command = `${runner} run --config vitest.config.v2.mjs related ${file}`;
         try {
             console.log(`Retrieving ${file} ${command}`);
 
