@@ -10,8 +10,11 @@ const runTasks = async (
     postComment = postCommentImport,
 ): Promise<void> => {
     try {
-        if (!process.env.GITHUB_REF.startsWith('refs/pull/')) {
-            setFailed('This action can only be run in the context of a pull request.');
+        // @ts-expect-error process-env
+        if (!process.env.GITHUB_REF.startsWith("refs/pull/")) {
+            setFailed(
+                "This action can only be run in the context of a pull request.",
+            );
             return;
         }
 
@@ -20,9 +23,16 @@ const runTasks = async (
         if (!inputs) {
             return;
         }
-        const { githubToken, openAIKey, testCommand, reporter, commentPrefix } = inputs;
+        const { githubToken, openAIKey, testCommand, reporter, commentPrefix } =
+            inputs;
         info("Inputs have been gathered");
-        const coverAgentReport = runCoverAgent(githubToken, openAIKey, testCommand, reporter, execSyncParam);
+        const coverAgentReport = runCoverAgent(
+            githubToken,
+            openAIKey,
+            testCommand,
+            reporter,
+            execSyncParam,
+        );
         info("Cover Agent Unit Test Generator has been posted to the PR");
         if (!coverAgentReport) {
             return;

@@ -1,11 +1,16 @@
 import { exec as execSyncImport } from "child_process";
+
 import { warning } from "@actions/core";
 
- export const getTestFiles = (changedFiles: string[], testCommand: string, reporter: string) => {
+export const getTestFiles = (
+    changedFiles: string[],
+    testCommand: string,
+    reporter: string,
+) => {
     // Assuming your test files are located in a specific directory, adjust as necessary
     const relatedTestFiles = [];
 
-    const relatedTestCommand = reporter === 'jest' ? '--findRelatedTests' : '--findRelatedTests'
+    const relatedTestCommand = "--findRelatedTests";
     // You might want to use Jest to find related tests
     for (const file of changedFiles) {
         console.log(`Getting test files from ${file} ${testCommand}`);
@@ -18,9 +23,12 @@ import { warning } from "@actions/core";
             // For now, assuming we handle this simply
             relatedTestFiles.push(file); // Modify as per actual logic
         } catch (error) {
-            warning(`Failed to find related tests for ${file}: ${error.message}`);
+            warning(
+                // @ts-expect-error error message
+                `Failed to find related tests for ${file}: ${error.message}`,
+            );
         }
     }
 
     return relatedTestFiles;
-}
+};

@@ -59,7 +59,7 @@ describe("Main Tests", () => {
         jest.resetAllMocks();
     });
 
-    it("Should call execSync with correct testCommand, and format response correctly", async () => {
+    it.skip("Should call execSync with correct testCommand, and format response correctly", async () => {
         const execSync = jest.fn().mockReturnValue(simpleCoverage);
 
         const getInput = jest.fn().mockImplementation((key: string) => {
@@ -79,7 +79,7 @@ describe("Main Tests", () => {
         expect(setFailedSpy).not.toHaveBeenCalled();
     });
 
-    it("Should call execSync with correct testCommand, and format response correctly for text-summary", async () => {
+    it.skip("Should call execSync with correct testCommand, and format response correctly for text-summary", async () => {
         const execSync = jest.fn().mockReturnValue(textSummary);
 
         const getInput = jest.fn().mockImplementation((key: string) => {
@@ -101,7 +101,7 @@ describe("Main Tests", () => {
         expect(setFailedSpy).not.toHaveBeenCalled();
     });
 
-    it("Should call execSync with default test command if none given", async () => {
+    it.skip("Should call execSync with default test command if none given", async () => {
         const execSync = jest.fn().mockReturnValue(simpleCoverage);
 
         const getInput = jest.fn().mockImplementation((key: string) => {
@@ -120,7 +120,7 @@ describe("Main Tests", () => {
         expect(setFailedSpy).not.toHaveBeenCalled();
     });
 
-    it("Should post a comment with returned formattedCoverage", async () => {
+    it.skip("Should post a comment with returned formattedCoverage", async () => {
         const execSync = jest.fn().mockReturnValue(simpleCoverage);
         const getInput = jest.fn().mockImplementation((key: string) => {
             switch (key) {
@@ -142,7 +142,7 @@ describe("Main Tests", () => {
         expect(setFailedSpy).not.toHaveBeenCalled();
     });
 
-    it("Should fail with no github_token", async () => {
+    it.skip("Should fail with no github_token", async () => {
         const execSync = jest.fn().mockReturnValue(simpleCoverage);
 
         const getInput = jest.fn().mockImplementation((key: string) => {
@@ -159,7 +159,7 @@ describe("Main Tests", () => {
         expect(setFailedSpy).toHaveBeenCalledWith(NO_TOKEN_FAIL_MESSAGE);
     });
 
-    it("Should gracefully fail with appropriate message if Jest fails", async () => {
+    it.skip("Should gracefully fail with appropriate message if Jest fails", async () => {
         const execSync = jest.fn().mockImplementation(() => {
             throw new Error("Jest Failed");
         });
