@@ -16,7 +16,7 @@ export interface IInputs {
 export const NO_TOKEN_FAIL_MESSAGE =
     "No github token provided (input: github_token)";
 export const NO_KEY_FAIL_MESSAGE =
-    "No github token provided (input: openai_api_key)";
+    "No OpenAI API Key provided (input: openai_api_key)";
 export const DEFAULT_TEST_COMMAND = "npx jest --coverage";
 export const DEFAULT_REPORTER = "text";
 export const DEFAULT_COMMENT_PREFIX = "## Jest Coverage";
@@ -36,7 +36,7 @@ const gatherAllInputs = (
         }
 
         const openAIKey = determineValue([getInput("openai_api_key")]);
-        debug(`Input - github_token: ${openAIKey}`);
+        debug(`Input - openai_api_key: ${openAIKey}`);
         if (!openAIKey) {
             return setFailed(NO_KEY_FAIL_MESSAGE);
         }

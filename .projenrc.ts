@@ -24,6 +24,10 @@ const project = new Node20GitHubActionTypescriptProject({
                 description: "A GitHub Token, the standard one is great",
                 required: true,
             },
+            openai_api_key: {
+                description: "An OpenAI API Key",
+                required: true,
+            },
             test_command: {
                 description:
                     "The test command to run, that also runs coverage appropriately",
