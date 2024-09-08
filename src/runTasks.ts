@@ -2,7 +2,7 @@ import { info, error, setFailed } from "@actions/core";
 
 import gatherAllInputs from "./tasks/gatherAllInputs";
 import postCommentImport from "./tasks/postComment";
-import runJest from "./tasks/runJest";
+import runCoverAgent from "./tasks/runCoverAgent";
 
 const runTasks = async (
     getInputParam?: (key: string) => string,
@@ -10,20 +10,24 @@ const runTasks = async (
     postComment = postCommentImport,
 ): Promise<void> => {
     try {
+        if (!process.env.GITHUB_REF.startsWith('refs/pull/')) {
+            setFailed('This action can only be run in the context of a pull request.');
+            return;
+        }
+
         info(`Jest Coverage Commenter v2`);
         const inputs = gatherAllInputs(getInputParam);
         if (!inputs) {
             return;
         }
-        const { githubToken, testCommand, reporter, commentPrefix } = inputs;
+        const { githubToken, openAIKey, testCommand, reporter, commentPrefix } = inputs;
         info("Inputs have been gathered");
-
-        const formattedCoverage = runJest(testCommand, reporter, execSyncParam);
-        info("Jest has been ran and coverage collected");
-        if (!formattedCoverage) {
+        const coverAgentReport = runCoverAgent(githubToken, openAIKey, testCommand, reporter, execSyncParam);
+        info("Cover Agent Unit Test Generator has been posted to the PR");
+        if (!coverAgentReport) {
             return;
         }
-        await postComment(formattedCoverage, githubToken, commentPrefix);
+        // await postComment(formattedCoverage, githubToken, commentPrefix);
         info("Comment has been posted to the PR");
     } catch (err) {
         error(err as Error);

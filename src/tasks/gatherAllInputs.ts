@@ -7,6 +7,7 @@ import {
 
 export interface IInputs {
     githubToken: string;
+    openAIKey: string;
     testCommand: string;
     reporter: string;
     commentPrefix: string;
@@ -14,6 +15,8 @@ export interface IInputs {
 
 export const NO_TOKEN_FAIL_MESSAGE =
     "No github token provided (input: github_token)";
+export const NO_KEY_FAIL_MESSAGE =
+    "No github token provided (input: openai_api_key)";
 export const DEFAULT_TEST_COMMAND = "npx jest --coverage";
 export const DEFAULT_REPORTER = "text";
 export const DEFAULT_COMMENT_PREFIX = "## Jest Coverage";
@@ -30,6 +33,12 @@ const gatherAllInputs = (
         debug(`Input - github_token: ${githubToken}`);
         if (!githubToken) {
             return setFailed(NO_TOKEN_FAIL_MESSAGE);
+        }
+
+        const openAIKey = determineValue([getInput("openai_api_key")]);
+        debug(`Input - github_token: ${openAIKey}`);
+        if (!openAIKey) {
+            return setFailed(NO_KEY_FAIL_MESSAGE);
         }
 
         const testCommand = determineValue(
@@ -63,6 +72,7 @@ const gatherAllInputs = (
 
         return {
             githubToken,
+            openAIKey,
             testCommand,
             reporter,
             commentPrefix,
