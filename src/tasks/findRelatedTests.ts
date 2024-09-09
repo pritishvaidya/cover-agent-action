@@ -38,7 +38,7 @@ const findTestFilesInDir = async (
                 );
                 if (
                     fileBaseName.includes(baseName) &&
-                    fileBaseName.includes("test")
+                    fullPath.includes(".test")
                 ) {
                     result.push(fullPath);
                 }
