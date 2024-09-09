@@ -11,11 +11,10 @@ const findRelatedTests = (
     testCommand: string,
 ): Promise<{ filePath: string; testPath: string }[]> => {
     // Resolve the absolute path to the file
-    const resolvedFilePath = path.resolve(filePath);
     console.log(`Fetched Test files for ${filePath}`);
 
     // Construct the Jest command to find related tests
-    const command = `${testCommand} --findRelatedTests ${resolvedFilePath}`;
+    const command = `${testCommand} --findRelatedTests ${filePath}`;
 
     return new Promise<{ filePath: string; testPath: string }[]>(
         (resolve, reject) => {
@@ -43,7 +42,7 @@ const findRelatedTests = (
                 >((acc, testPath) => {
                     if (!seenTestPaths.has(testPath)) {
                         seenTestPaths.add(testPath);
-                        acc.push({ filePath: resolvedFilePath, testPath });
+                        acc.push({ filePath, testPath });
                     }
                     return acc;
                 }, []);
