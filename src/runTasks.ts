@@ -23,16 +23,32 @@ const runTasks = async (
         if (!inputs) {
             return;
         }
-        const { githubToken, openAIKey, testCommand, reporter, commentPrefix } =
-            inputs;
+        const {
+            githubToken,
+            openAIKey,
+            testCommand,
+            reporter,
+            commentPrefix,
+            coveragePath,
+            coverageType,
+            desiredCoverage,
+            maxIterations,
+            additionalCoverAgentCommands,
+        } = inputs;
         info("Inputs have been gathered");
-        const coverAgentReport = runCoverAgent(
+        const coverAgentReport = runCoverAgent({
             githubToken,
             openAIKey,
             testCommand,
             reporter,
             execSyncParam,
-        );
+            commentPrefix,
+            coverageType,
+            coveragePath,
+            desiredCoverage,
+            maxIterations,
+            additionalCoverAgentCommands,
+        });
         info("Cover Agent Unit Test Generator has been posted to the PR");
         if (!coverAgentReport) {
             return;

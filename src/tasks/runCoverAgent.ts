@@ -13,25 +13,39 @@ export interface FormattedCoverage {
 export const COVER_AGENT_ERROR_MESSAGE =
     "There was an error while running Cover Agent CLI.";
 
-const runCoverageCommand = async (
-    file: string,
-    testFile: string,
-    testCommand: string,
-    coverageType: string,
-    desiredCoverage: number,
-    maxIterations: number,
-) => {
+const runCoverageCommand = async ({
+    file,
+    testFile,
+    coveragePath = "./coverage/cobertura-coverage.xml",
+    testCommand,
+    coverageType = "cobertura",
+    desiredCoverage = "100",
+    maxIterations = "2",
+    additionalCoverAgentCommands,
+}: {
+    file: string;
+    testFile: string;
+    coveragePath: string;
+    testCommand: string;
+    coverageType: string;
+    desiredCoverage: string;
+    maxIterations: string;
+    additionalCoverAgentCommands: string;
+}): Promise<string> => {
     return new Promise((resolve, reject) => {
         const command = `cover-agent \
           --source-file-path "${file}" \
           --test-file-path "${testFile}" \
-          --code-coverage-report-path "./coverage/cobertura-coverage.xml" \
+          --code-coverage-report-path "${coveragePath}" \
           --test-command "${testCommand}" \
           --coverage-type "${coverageType}" \
           --desired-coverage ${desiredCoverage} \
-          --max-iterations ${maxIterations}`;
+          --max-iterations ${maxIterations} \
+          ${additionalCoverAgentCommands}`;
 
         console.log(`Executing command: ${command}`);
+
+        resolve(command);
 
         // execPromise(command)
         //     .then((code) => {
@@ -45,13 +59,31 @@ const runCoverageCommand = async (
     });
 };
 
-const runCoverAgent = async (
-    githubToken: string,
-    openAIKey: string,
-    testCommand: string,
-    reporter: string,
-    execSyncParam?: (command: string) => Buffer,
-) => {
+const runCoverAgent = async ({
+    githubToken,
+    openAIKey,
+    testCommand,
+    reporter,
+    execSyncParam,
+    commentPrefix,
+    coverageType,
+    coveragePath,
+    desiredCoverage,
+    maxIterations,
+    additionalCoverAgentCommands,
+}: {
+    githubToken: string;
+    openAIKey: string;
+    testCommand: string;
+    reporter: string;
+    execSyncParam: ((command: string) => Buffer) | undefined;
+    commentPrefix: string;
+    coverageType: string;
+    coveragePath: string;
+    desiredCoverage: string;
+    maxIterations: string;
+    additionalCoverAgentCommands: string;
+}) => {
     try {
         // @ts-expect-error process-env
         const refParts = process.env.GITHUB_REF.split("/");
@@ -73,13 +105,32 @@ const runCoverAgent = async (
             pull_number: Number(prNumber),
         });
 
+        const coveragePromises: Promise<string>[] = [];
         for (const file of changedFiles) {
             const testFiles = await findRelatedTests(
                 file.filename,
                 testCommand,
             );
-            console.log(`Fetched Test files for ${file}`, testFiles);
+            console.log(`Fetched test files for ${file.filename}:`, testFiles);
+
+            for (const { testPath } of testFiles) {
+                const coveragePromise = runCoverageCommand({
+                    file: file.filename,
+                    testFile: testPath,
+                    coveragePath,
+                    testCommand,
+                    coverageType,
+                    desiredCoverage,
+                    maxIterations,
+                    additionalCoverAgentCommands,
+                });
+                coveragePromises.push(coveragePromise);
+            }
         }
+
+        // Wait for all coverage commands to complete
+        await Promise.all(coveragePromises);
+        console.log("All coverage commands executed successfully");
 
         // const filePaths = changedFiles.map((file) => file.filename);
         // console.log("Fetched changed files in the PR", changedFiles);

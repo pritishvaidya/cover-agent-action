@@ -11,6 +11,11 @@ export interface IInputs {
     testCommand: string;
     reporter: string;
     commentPrefix: string;
+    coveragePath: string;
+    coverageType: string;
+    desiredCoverage: string;
+    maxIterations: string;
+    additionalCoverAgentCommands: string;
 }
 
 export const NO_TOKEN_FAIL_MESSAGE =
@@ -20,8 +25,12 @@ export const NO_KEY_FAIL_MESSAGE =
 export const DEFAULT_TEST_COMMAND = "npx jest --coverage";
 export const DEFAULT_REPORTER = "text";
 export const DEFAULT_COMMENT_PREFIX = "## Jest Coverage";
-
-export const POSSIBLE_REPORTERS = ["text", "text-summary"];
+export const POSSIBLE_REPORTERS = ["text", "text-summary", "cobertura"];
+export const COVERAGE_PATH = "./coverage/coverage-cobertura.xml";
+export const COVERAGE_TYPE = "cobertura";
+export const DESIRED_COVERAGE = "100";
+export const MAX_ITERATIONS = "2";
+export const ADDITIONAL_COVER_AGENT_COMMANDS = "";
 
 const gatherAllInputs = (
     getInputParam?: (key: string) => string,
@@ -70,12 +79,74 @@ const gatherAllInputs = (
             throw new Error("Invalid reporter");
         }
 
+        const coveragePath = determineValue([
+            getInput("coverage_path"),
+            COVERAGE_PATH,
+        ]);
+        debug(`Input - coverage_path: ${coveragePath}`);
+        if (!coveragePath) {
+            return setFailed(
+                "No Cover Agent Params provided (input: coverage_path)",
+            );
+        }
+
+        const coverageType = determineValue([
+            getInput("coverage_type"),
+            COVERAGE_TYPE,
+        ]);
+        debug(`Input - coverage_type: ${coverageType}`);
+        if (!coverageType) {
+            return setFailed(
+                "No Cover Agent Params provided (input: coverage_type)",
+            );
+        }
+
+        const desiredCoverage = determineValue([
+            getInput("desired_coverage"),
+            DESIRED_COVERAGE,
+        ]);
+        debug(`Input - desired_coverage: ${desiredCoverage}`);
+        if (!desiredCoverage) {
+            return setFailed(
+                "No Cover Agent Params provided (input: desired_coverage)",
+            );
+        }
+
+        const maxIterations = determineValue([
+            getInput("max_iterations"),
+            MAX_ITERATIONS,
+        ]);
+        debug(`Input - max_iterations: ${maxIterations}`);
+        if (!maxIterations) {
+            return setFailed(
+                "No Cover Agent Params provided (input: max_iterations)",
+            );
+        }
+
+        const additionalCoverAgentCommands = determineValue([
+            getInput("additional_cover_agent_commands"),
+            ADDITIONAL_COVER_AGENT_COMMANDS,
+        ]);
+        debug(
+            `Input - additional_cover_agent_commands: ${additionalCoverAgentCommands}`,
+        );
+        if (!additionalCoverAgentCommands) {
+            return setFailed(
+                "No Cover Agent Params provided (input: additional_cover_agent_commands)",
+            );
+        }
+
         return {
             githubToken,
             openAIKey,
             testCommand,
             reporter,
             commentPrefix,
+            coveragePath,
+            coverageType,
+            desiredCoverage,
+            maxIterations,
+            additionalCoverAgentCommands,
         };
     } catch (err) {
         error("There was an error while gathering inputs");
