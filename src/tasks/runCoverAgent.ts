@@ -3,7 +3,7 @@ import { execSync as execSyncImport } from "child_process";
 import { error, warning, debug } from "@actions/core";
 import { getOctokit as getOctokitImport } from "@actions/github";
 
-import { getTestFiles } from "./getTestFiles";
+import findRelatedTests from "./findRelatedTests";
 
 export interface FormattedCoverage {
     summary?: string;
@@ -12,6 +12,38 @@ export interface FormattedCoverage {
 
 export const COVER_AGENT_ERROR_MESSAGE =
     "There was an error while running Cover Agent CLI.";
+
+const runCoverageCommand = async (
+    file: string,
+    testFile: string,
+    testCommand: string,
+    coverageType: string,
+    desiredCoverage: number,
+    maxIterations: number,
+) => {
+    return new Promise((resolve, reject) => {
+        const command = `cover-agent \
+          --source-file-path "${file}" \
+          --test-file-path "${testFile}" \
+          --code-coverage-report-path "./coverage/cobertura-coverage.xml" \
+          --test-command "${testCommand}" \
+          --coverage-type "${coverageType}" \
+          --desired-coverage ${desiredCoverage} \
+          --max-iterations ${maxIterations}`;
+
+        console.log(`Executing command: ${command}`);
+
+        // execPromise(command)
+        //     .then((code) => {
+        //         console.log(`cover-agent exited with code ${code}`);
+        //         resolve(code);
+        //     })
+        //     .catch((error) => {
+        //         console.error(`Error: ${error.message}`);
+        //         reject(error);
+        //     });
+    });
+};
 
 const runCoverAgent = async (
     githubToken: string,
@@ -41,12 +73,23 @@ const runCoverAgent = async (
             pull_number: Number(prNumber),
         });
 
-        console.log("Fetched changed files in the PR", changedFiles);
+        for (const file of changedFiles) {
+            const testFiles = await findRelatedTests(
+                file.filename,
+                testCommand,
+            );
+            console.log(`Fetched Test files for ${file}`, testFiles);
+        }
 
-        const filePaths = changedFiles.map((file) => file.filename);
-        const testFiles = getTestFiles(filePaths, testCommand, reporter);
-
-        console.log("Fetched Test files", testFiles);
+        // const filePaths = changedFiles.map((file) => file.filename);
+        // console.log("Fetched changed files in the PR", changedFiles);
+        //
+        // const testFiles = findRelatedTests(filePaths, testCommand);
+        // console.log("Fetched Test files", testFiles);
+        //
+        // for (const testFile of testFiles) {
+        //     await runCoverageCommand(te, testFile, testCommand, coverageType, desiredCoverage, maxIterations);
+        // }
 
         //         const codeCoverage = execSync(testCommand).toString();
         //         try {
