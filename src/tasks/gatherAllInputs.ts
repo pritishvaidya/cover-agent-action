@@ -30,7 +30,7 @@ export const COVERAGE_PATH = "./coverage/coverage-cobertura.xml";
 export const COVERAGE_TYPE = "cobertura";
 export const DESIRED_COVERAGE = "100";
 export const MAX_ITERATIONS = "2";
-export const ADDITIONAL_COVER_AGENT_COMMANDS = "";
+export const ADDITIONAL_COVER_AGENT_COMMANDS = " ";
 
 const gatherAllInputs = (
     getInputParam?: (key: string) => string,
