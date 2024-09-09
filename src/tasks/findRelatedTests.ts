@@ -24,6 +24,7 @@ const findSimilarNamedFiles = async (filePath: string): Promise<string[]> => {
         // Find files with similar names
         const similarFiles = files.filter((file) => {
             const fileBaseName = path.basename(file, path.extname(file));
+            console.log("file paths", file, fileBaseName);
             return (
                 fileBaseName.includes(baseName) &&
                 file !== path.basename(filePath)
