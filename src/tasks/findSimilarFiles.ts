@@ -34,34 +34,4 @@ const findSimilarNamedFiles = async (filePath: string): Promise<string[]> => {
     }
 };
 
-/**
- * Finds related test files for a given source file by searching for files with similar names.
- * @param filePath - The path to the source file for which to find related tests.
- * @returns A promise that resolves to an array of related test file paths.
- */
-const findRelatedTests = async (
-    filePath: string,
-): Promise<{ filePath: string; testPath: string }[]> => {
-    try {
-        console.log(`Finding related test files for ${filePath}`);
-
-        // Find files with similar names in the same directory
-        const similarFiles = await findSimilarNamedFiles(filePath);
-
-        // Prepare the result in the format { filePath, testPath }
-        const result = similarFiles.map((testPath) => ({
-            filePath,
-            testPath,
-        }));
-        console.log(
-            `Found related test files for ${filePath} with ${similarFiles}`,
-        );
-
-        return result;
-    } catch (err) {
-        console.error("Error finding related tests:", err);
-        return [];
-    }
-};
-
-export default findRelatedTests;
+export default findSimilarNamedFiles;

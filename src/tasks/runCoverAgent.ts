@@ -109,11 +109,7 @@ const runCoverAgent = async ({
 
         const coveragePromises: Promise<string>[] = [];
         for (const file of changedFiles) {
-            const testFiles = await findRelatedTests(
-                file.filename,
-                testCommand,
-                runner,
-            );
+            const testFiles = await findRelatedTests(file.filename);
             console.log(`Fetched test files for ${file.filename}:`, testFiles);
 
             for (const { testPath } of testFiles) {
