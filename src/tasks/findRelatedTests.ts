@@ -2,46 +2,59 @@ import fs from "fs/promises";
 import * as console from "node:console";
 import path from "path";
 
-/**
- * Finds files with names similar to the base name of the given filePath in the same directory.
- * @param filePath - The path to the file whose base name is used for finding similar files.
- * @returns A promise that resolves to an array of similar file paths.
- */
-const findSimilarNamedFiles = async (filePath: string): Promise<string[]> => {
+const findTestFiles = async (filePath: string): Promise<string[]> => {
     try {
-        // Extract the base name from the filePath
+        // Extract the base name of the file (without extension)
         const baseName = path.basename(filePath, path.extname(filePath));
-        console.log("Basename ", baseName);
 
-        // Get the directory containing the filePath
+        // Define potential test directories
+        const potentialDirs = ["tests", "__tests__"];
+
+        // Get the directory containing the given file path
         const dirName = path.dirname(filePath);
-        console.log("dirName ", dirName);
 
-        // Read the contents of the directory
-        const files = await fs.readdir(dirName);
-        console.log("files ", files);
+        // Function to find files in a given directory
+        const findFilesInDir = async (directory: string): Promise<string[]> => {
+            try {
+                return await fs.readdir(directory);
+            } catch (err) {
+                console.error(`Error reading directory ${directory}:`, err);
+                return [];
+            }
+        };
 
-        // Find files with similar names
-        const similarFiles = files.filter((file) => {
-            const fileBaseName = path.basename(file, path.extname(file));
-            console.log({
-                file,
-                baseName,
-                fileBaseName,
-                pathName: path.basename(filePath),
-            });
-            return (
-                file.includes(baseName) &&
-                fileBaseName.includes("test") &&
-                file !== path.basename(filePath)
-            );
-        });
-        console.log("similarFiles ", similarFiles);
+        // Function to check if the directory contains test files
+        const checkForTestFiles = async (
+            directory: string,
+        ): Promise<string[]> => {
+            const similarFiles: string[] = [];
+            for (const dir of potentialDirs) {
+                const testDirPath = path.join(directory, dir);
+                const files = await findFilesInDir(testDirPath);
 
-        // Resolve with the list of similar file paths
-        return similarFiles.map((file) => path.join(dirName, file));
+                // Filter files based on base name and presence of "test"
+                const matchedFiles = files.filter((file) => {
+                    const fileBaseName = path.basename(
+                        file,
+                        path.extname(file),
+                    );
+                    return fileBaseName.includes(baseName);
+                });
+
+                // Add matched files with their full path
+                similarFiles.push(
+                    ...matchedFiles.map((file) => path.join(testDirPath, file)),
+                );
+            }
+            return similarFiles;
+        };
+
+        // Check the parent directory and potential test directories
+        const testFiles = await checkForTestFiles(dirName);
+        console.log("Test Files", testFiles);
+        return testFiles;
     } catch (err) {
-        console.error("Error finding similar named files:", err);
+        console.error("Error finding test files:", err);
         return [];
     }
 };
@@ -58,7 +71,7 @@ const findRelatedTests = async (
         console.log(`Finding related test files for ${filePath}`);
 
         // Find files with similar names in the same directory
-        const similarFiles = await findSimilarNamedFiles(filePath);
+        const similarFiles = await findTestFiles(filePath);
 
         // Prepare the result in the format { filePath, testPath }
         const result = similarFiles.map((testPath) => ({
