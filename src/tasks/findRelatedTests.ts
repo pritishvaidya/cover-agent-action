@@ -9,12 +9,14 @@ import path from "path";
 const findRelatedTests = (
     filePath: string,
     testCommand: string,
+    runner: string,
 ): Promise<{ filePath: string; testPath: string }[]> => {
     // Resolve the absolute path to the file
     console.log(`Fetched Test files for ${filePath}`);
-
+    const runnerCommand =
+        runner === "vitest" ? "related" : "--findRelatedTests";
     // Construct the Jest command to find related tests
-    const command = `${testCommand} --findRelatedTests ${filePath}`;
+    const command = `${testCommand} ${runnerCommand} ${filePath}`;
     console.log("Running test command", command);
 
     return new Promise<{ filePath: string; testPath: string }[]>(

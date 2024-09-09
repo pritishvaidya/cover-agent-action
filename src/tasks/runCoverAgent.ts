@@ -63,6 +63,7 @@ const runCoverAgent = async ({
     githubToken,
     openAIKey,
     testCommand,
+    runner,
     reporter,
     execSyncParam,
     commentPrefix,
@@ -75,6 +76,7 @@ const runCoverAgent = async ({
     githubToken: string;
     openAIKey: string;
     testCommand: string;
+    runner: string;
     reporter: string;
     execSyncParam: ((command: string) => Buffer) | undefined;
     commentPrefix: string;
@@ -110,6 +112,7 @@ const runCoverAgent = async ({
             const testFiles = await findRelatedTests(
                 file.filename,
                 testCommand,
+                runner,
             );
             console.log(`Fetched test files for ${file.filename}:`, testFiles);
 

@@ -9,6 +9,7 @@ export interface IInputs {
     githubToken: string;
     openAIKey: string;
     testCommand: string;
+    runner: string;
     reporter: string;
     commentPrefix: string;
     coveragePath: string;
@@ -23,6 +24,7 @@ export const NO_TOKEN_FAIL_MESSAGE =
 export const NO_KEY_FAIL_MESSAGE =
     "No OpenAI API Key provided (input: openai_api_key)";
 export const DEFAULT_TEST_COMMAND = "npx jest --coverage";
+export const RUNNER = "jest";
 export const DEFAULT_REPORTER = "text";
 export const DEFAULT_COMMENT_PREFIX = "## Jest Coverage";
 export const POSSIBLE_REPORTERS = ["text", "text-summary", "cobertura"];
@@ -57,6 +59,12 @@ const gatherAllInputs = (
         debug(`Input - test_command: ${testCommand}`);
         if (!testCommand) {
             return setFailed("No test command provided (input: test_command)");
+        }
+
+        const runner = determineValue([getInput("runner")], RUNNER);
+        debug(`Input - runner: ${runner}`);
+        if (!runner) {
+            return setFailed("No runner provided (input: runner)");
         }
 
         const commentPrefix = determineValue([
@@ -140,6 +148,7 @@ const gatherAllInputs = (
             githubToken,
             openAIKey,
             testCommand,
+            runner,
             reporter,
             commentPrefix,
             coveragePath,
