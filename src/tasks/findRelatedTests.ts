@@ -1,4 +1,5 @@
 import fs from "fs/promises";
+import * as console from "node:console";
 import path from "path";
 
 /**
@@ -10,12 +11,15 @@ const findSimilarNamedFiles = async (filePath: string): Promise<string[]> => {
     try {
         // Extract the base name from the filePath
         const baseName = path.basename(filePath, path.extname(filePath));
+        console.log("Basename ", baseName);
 
         // Get the directory containing the filePath
         const dirName = path.dirname(filePath);
+        console.log("dirName ", dirName);
 
         // Read the contents of the directory
         const files = await fs.readdir(dirName);
+        console.log("files ", files);
 
         // Find files with similar names
         const similarFiles = files.filter((file) => {
