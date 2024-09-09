@@ -15,6 +15,7 @@ const findRelatedTests = (
 
     // Construct the Jest command to find related tests
     const command = `${testCommand} --findRelatedTests ${filePath}`;
+    console.log("Running test command", command);
 
     return new Promise<{ filePath: string; testPath: string }[]>(
         (resolve, reject) => {
