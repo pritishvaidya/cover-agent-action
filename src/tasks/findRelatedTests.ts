@@ -21,7 +21,7 @@ const findRelatedTests = (
             // Execute the Jest command
             exec(command, (error, stdout, stderr) => {
                 if (error) {
-                    return resolve([])
+                    return resolve([]);
                 }
                 if (stderr) {
                     reject(new Error(`Jest stderr: ${stderr}`));
