@@ -29,6 +29,7 @@ const findSimilarNamedFiles = async (filePath: string): Promise<string[]> => {
                 file !== path.basename(filePath)
             );
         });
+        console.log("similarFiles ", similarFiles);
 
         // Resolve with the list of similar file paths
         return similarFiles.map((file) => path.join(dirName, file));
