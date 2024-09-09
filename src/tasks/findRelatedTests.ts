@@ -12,6 +12,7 @@ const findRelatedTests = (
 ): Promise<{ filePath: string; testPath: string }[]> => {
     // Resolve the absolute path to the file
     const resolvedFilePath = path.resolve(filePath);
+    console.log(`Fetched Test files for ${filePath}`);
 
     // Construct the Jest command to find related tests
     const command = `${testCommand} --findRelatedTests ${resolvedFilePath}`;
