@@ -62,6 +62,7 @@ const runCoverageCommand = async ({
       --test-file-path "${testFile}" \
       --code-coverage-report-path "${coveragePath}" \
       --test-command "${testCommand}" \
+      --test-command-dir $(pwd) \
       --coverage-type "${coverageType}" \
       --desired-coverage ${desiredCoverage} \
       --max-iterations ${maxIterations} \
