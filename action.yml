@@ -41,11 +41,7 @@ runs:
         repository: ${{ inputs.repo_name }}
         token: ${{ inputs.github_token }}
         path: .
-    - name: copy contents to /src directory
-      shell: bash
-      run: |
-        mkdir -p /src
-        cp -r ./* /src
+
     - name: Install Python Dependencies
       shell: bash
       run: |
