@@ -2,7 +2,7 @@ name: Jest Coverage Commenter
 description: Comment on PRs with Jest Coverage Information
 runs:
   using: node20
-  main: dist/index.js
+  main: ../dist/index.js
 inputs:
   github_token:
     description: A GitHub Token, the standard one is great
