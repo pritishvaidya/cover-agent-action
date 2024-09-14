@@ -2,12 +2,12 @@
 
 name: Jest Coverage Commenter
 description: Comment on PRs with Jest Coverage Information
-runs:
-  using: node20
-  main: dist/index.js
 inputs:
   github_token:
     description: A GitHub Token, the standard one is great
+    required: true
+  repo_name:
+    description: A GitHub Repository name
     required: true
   openai_api_key:
     description: An OpenAI API Key
@@ -27,3 +27,91 @@ inputs:
 branding:
   icon: percent
   color: orange
+runs:
+  using: composite
+  steps:
+    - name: Checkout target repo
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        repository: ${{ inputs.repo_name }}
+        token: ${{ inputs.github_token }}
+        path: .
+    - name: copy contents to /src directory
+      shell: bash
+      run: |
+        mkdir -p /src
+        cp -r ./* /src
+    - name: Install Python Dependencies
+      shell: bash
+      run: |
+        echo "Installing Python Dependencies"
+        apk add --no-cache python3-dev build-base py3-pip geos-dev git gcc musl-dev make curl linux-headers > /dev/null
+        python -m pip install --upgrade pip > /dev/null
+
+    - name: Configure Git to use PAT
+      shell: bash
+      run: git config --global url."https://${{ inputs.github_token }}@github.com/".insteadOf "https://github.com/"
+
+    - name: Verify Python 3 installation
+      shell: bash
+      run: python3 --version
+
+    - name: Install cover-agent
+      shell: bash
+      run: |
+        echo "Installing Cover Agent"
+        pip install git+https://github.com/ankitchoudhary2209/cover-agent.git@b3 > /dev/null
+    - name: Run cover-agent-ci
+      id: cover-agent-ci-action
+      uses: pritishvaidya/cover-agent-action@cover-agent-jest/cover-agent-action.yml
+      env:
+        AZURE_API_KEY: ${{ inputs.API_KEY }}
+        AZURE_API_BASE: 'https://hackonfy25.openai.azure.com'
+        AZURE_API_VERSION: '2024-02-15-preview'
+      with:
+        openai_api_key: ${{ inputs.openai_api_key }}
+        test_command: ${{ inputs.test_command }}
+        max_iterations: ${{ inputs.max_iterations }}
+        github_token: ${{ inputs.github_token }}
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: ${{ github.workspace }}/*.html
+
+    - name: Remove files
+      shell: bash
+      run: |
+        rm -f run.log test_results_*.html coverage.xml
+        git diff
+
+#    - name: Create PR with changes
+#      id: create-pr
+#      uses: peter-evans/create-pull-request@v6
+#      with:
+#        branch: "testgen/${{ github.head_ref || github.ref_name }}"
+#        base: ${{ github.head_ref || github.ref_name }}
+#        commit-message: Add generated tests
+#        title: "Generated test for PR #${{ github.event.number }}"
+#        token: ${{ inputs.github_token }}
+#        draft: true
+
+#    - name: Comment coverage summary on PR
+#      if: ${{ steps.create-pr.outputs.pull-request-number }}
+#      uses: actions/github-script@v7
+#      with:
+#        github-token: ${{ inputs.github_token }}
+#        script: |
+#          const fs = require('fs');
+#          const coverageBefore = "${{ steps.coverageBefore.outputs.coverage }}".trim();
+#          const coverageAfter = "${{ steps.coverageAfter.outputs.coverage }}".trim();
+#          const comment = `### Find the PR with generated test #${{steps.create-pr.outputs.pull-request-number}}`;
+#          github.rest.issues.createComment({
+#            issue_number: context.issue.number,
+#            owner: context.repo.owner,
+#            repo: context.repo.repo,
+#            body: comment
+#          });
+
