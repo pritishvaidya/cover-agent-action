@@ -41,7 +41,7 @@ export const COVER_AGENT_ERROR_MESSAGE =
 const runCoverageCommand = async ({
     file,
     testFile,
-    coveragePath = "./coverage/cobertura-coverage.xml",
+    coveragePath = "coverage/cobertura-coverage.xml",
     testCommand,
     coverageType = "cobertura",
     desiredCoverage = "100",

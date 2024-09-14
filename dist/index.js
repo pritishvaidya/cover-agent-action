@@ -433,7 +433,7 @@ function execPromise(command) {
     });
 }
 exports.COVER_AGENT_ERROR_MESSAGE = "There was an error while running Cover Agent CLI.";
-const runCoverageCommand = async ({ file, testFile, coveragePath = "./coverage/cobertura-coverage.xml", testCommand, coverageType = "cobertura", desiredCoverage = "100", maxIterations = "2", additionalCoverAgentCommands, }) => {
+const runCoverageCommand = async ({ file, testFile, coveragePath = "coverage/cobertura-coverage.xml", testCommand, coverageType = "cobertura", desiredCoverage = "100", maxIterations = "2", additionalCoverAgentCommands, }) => {
     const command = `cover-agent \
       --source-file-path "${file}" \
       --test-file-path "${testFile}" \
