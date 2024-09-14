@@ -12,6 +12,10 @@ inputs:
   openai_api_key:
     description: An OpenAI API Key
     required: true
+  max_iterations:
+    description: 'Max Iterations'
+    default: '2'
+    required: false
   test_command:
     description: The test command to run, that also runs coverage appropriately
     default: npx jest --coverage
