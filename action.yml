@@ -42,26 +42,32 @@ runs:
         token: ${{ inputs.github_token }}
         path: .
 
-    - name: Install Python Dependencies
-      shell: bash
-      run: |
-        echo "Installing Python Dependencies"
-        apk add --no-cache python3-dev build-base py3-pip geos-dev git gcc musl-dev make curl linux-headers > /dev/null
-        python -m pip install --upgrade pip > /dev/null
+    - name: Set environment variable for Git SHA
+      shell: sh
+      run: echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)" >> $GITHUB_ENV
 
-    - name: Configure Git to use PAT
-      shell: bash
-      run: git config --global url."https://${{ inputs.github_token }}@github.com/".insteadOf "https://github.com/"
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ inputs.python-version }}
 
-    - name: Verify Python 3 installation
-      shell: bash
-      run: python3 --version
+    - name: Cache Poetry dependencies
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cache/pypoetry
+          ~/.cache/pip
+        key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-poetry-
 
-    - name: Install cover-agent
-      shell: bash
-      run: |
-        echo "Installing Cover Agent"
-        pip install git+https://github.com/ankitchoudhary2209/cover-agent.git@b3 > /dev/null
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+
+    - name: Install Cover-Agent
+      shell: sh
+      run: pip install git+https://github.com/Codium-ai/cover-agent.git
+
     - name: Run cover-agent-ci
       id: cover-agent-ci-action
       uses: pritishvaidya/cover-agent-action/src@cover-agent-jest
