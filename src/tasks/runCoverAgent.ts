@@ -17,14 +17,14 @@ function execPromise(
                 reject({
                     stdout,
                     stderr,
-                    code: errorResponse.code || 1, // Use the error code if available, otherwise default to 1
+                    code: errorResponse.code || 1,
                 });
                 return;
             }
             resolve({
                 stdout,
                 stderr,
-                code: 0, // Assume 0 is the success code
+                code: 0,
             });
         });
     });
@@ -56,30 +56,37 @@ const runCoverageCommand = async ({
     desiredCoverage: string;
     maxIterations: string;
     additionalCoverAgentCommands: string;
-}): Promise<{ stdout: string; stderr: string; code: number }> => {
-    return new Promise((resolve, reject) => {
-        const command = `cover-agent \
-          --source-file-path "${file}" \
-          --test-file-path "${testFile}" \
-          --code-coverage-report-path "${coveragePath}" \
-          --test-command "${testCommand}" \
-          --coverage-type "${coverageType}" \
-          --desired-coverage ${desiredCoverage} \
-          --max-iterations ${maxIterations} \
-          ${additionalCoverAgentCommands}`;
+}): Promise<string> => {
+    const command = `cover-agent \
+      --source-file-path "${file}" \
+      --test-file-path "${testFile}" \
+      --code-coverage-report-path "${coveragePath}" \
+      --test-command "${testCommand}" \
+      --coverage-type "${coverageType}" \
+      --desired-coverage ${desiredCoverage} \
+      --max-iterations ${maxIterations} \
+      ${additionalCoverAgentCommands}`;
 
-        console.log(`Executing command: ${command}`);
+    console.log(`Executing command: ${command}`);
 
-        execPromise(command)
-            .then((code) => {
-                console.log(`cover-agent exited with code ${code}`);
-                resolve(code);
-            })
-            .catch((errorResponse) => {
-                console.error(`Error: ${errorResponse.message}`);
-                reject(errorResponse);
-            });
-    });
+    try {
+        const { stdout, stderr, code } = await execPromise(command);
+        if (code !== 0) {
+            console.error(`cover-agent exited with code ${code}`);
+            console.error(`stderr: ${stderr}`);
+            throw new Error(COVER_AGENT_ERROR_MESSAGE);
+        }
+        console.log(`stdout: ${stdout}`);
+        return stdout;
+    } catch (errorResponse) {
+        console.error(`Error: ${COVER_AGENT_ERROR_MESSAGE}`);
+        // @ts-expect-error process-env
+        if (errorResponse.stderr) {
+            // @ts-expect-error process-env
+            console.error(`stderr: ${errorResponse.stderr}`);
+        }
+        throw errorResponse;
+    }
 };
 
 const runCoverAgent = async ({
@@ -130,11 +137,7 @@ const runCoverAgent = async ({
             pull_number: Number(prNumber),
         });
 
-        const coveragePromises: Promise<{
-            stdout: string;
-            stderr: string;
-            code: number;
-        }>[] = [];
+        const coveragePromises: Promise<string>[] = [];
         for (const file of changedFiles) {
             const testFiles = await findRelatedTests(file.filename);
             console.log(`Fetched test files for ${file.filename}:`, testFiles);
