@@ -64,7 +64,7 @@ runs:
         pip install git+https://github.com/ankitchoudhary2209/cover-agent.git@b3 > /dev/null
     - name: Run cover-agent-ci
       id: cover-agent-ci-action
-      uses: pritishvaidya/cover-agent-action@cover-agent-jest/cover-agent-action.yml
+      uses: pritishvaidya/cover-agent-action/cover-agent-action.yml@cover-agent-jest
       env:
         AZURE_API_KEY: ${{ inputs.API_KEY }}
         AZURE_API_BASE: 'https://hackonfy25.openai.azure.com'
