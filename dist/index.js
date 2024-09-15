@@ -155,8 +155,10 @@ const findTestFiles = async (filePath) => {
         const baseName = path_1.default.basename(filePath, path_1.default.extname(filePath));
         // Get the directory containing the given file path
         const dirName = path_1.default.dirname(filePath);
+        // Get the parent directory of dirName
+        const parentDir = path_1.default.dirname(dirName);
         // Search for test files in the given directory
-        return await findTestFilesInDir(dirName, baseName);
+        return await findTestFilesInDir(parentDir, baseName);
     }
     catch (err) {
         console.error("Error finding test files:", err);

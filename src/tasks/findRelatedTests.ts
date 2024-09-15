@@ -60,8 +60,11 @@ const findTestFiles = async (filePath: string): Promise<string[]> => {
         // Get the directory containing the given file path
         const dirName = path.dirname(filePath);
 
+        // Get the parent directory of dirName
+        const parentDir = path.dirname(dirName);
+
         // Search for test files in the given directory
-        return await findTestFilesInDir(dirName, baseName);
+        return await findTestFilesInDir(parentDir, baseName);
     } catch (err) {
         console.error("Error finding test files:", err);
         return [];
