@@ -61,7 +61,7 @@ const runCoverageCommand = async ({
       --source-file-path "${file}" \
       --test-file-path "${testFile}" \
       --code-coverage-report-path "${coveragePath}" \
-      --test-command "${testCommand}" \
+      --test-command "${testCommand} ${testFile}" \
       --test-command-dir $(pwd) \
       --coverage-type "${coverageType}" \
       --desired-coverage ${desiredCoverage} \
