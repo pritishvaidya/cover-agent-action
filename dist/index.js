@@ -444,7 +444,7 @@ const runCoverageCommand = async ({ file, testFile, coveragePath = "coverage/cob
       --desired-coverage ${desiredCoverage} \
       --max-iterations ${maxIterations} \
       ${additionalCoverAgentCommands}`;
-    console.log(`Executing command: ${command}`);
+    console.log(`Executing command: ${command}, ${process.cwd()}`);
     try {
         const { stdout, stderr, code } = await execPromise(command);
         if (code !== 0) {
