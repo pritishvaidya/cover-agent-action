@@ -78,6 +78,9 @@ const findRelatedTests = async (
 ): Promise<{ filePath: string; testPath: string }[]> => {
     try {
         console.log(`Finding related test files for ${filePath}`);
+        if(filePath.includes(".test") || filePath.includes("__tests__")) {
+            return []
+        }
 
         // Find files with similar names in the same directory
         const similarFiles = await findTestFiles(filePath);
